@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Estoque</title>
-    <!-- SDK do Supabase carregada apenas UMA vez -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -34,13 +33,9 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { font-size: 15px; scroll-behavior: smooth; }
         body {
-            font-family: var(--font);
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            line-height: 1.5;
+            font-family: var(--font); background: var(--bg); color: var(--text);
+            min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
         #login-screen {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -49,13 +44,9 @@
         }
         #login-screen.hidden { display: none; }
         .login-card {
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 16px;
-            padding: 40px 32px;
-            width: 100%; max-width: 400px;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.5);
-            text-align: center;
+            background: var(--bg-card); border: 2px solid var(--border);
+            border-radius: 16px; padding: 40px 32px; width: 100%; max-width: 400px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5); text-align: center;
         }
         .login-card svg { width: 48px; height: 48px; color: var(--azul); margin-bottom: 12px; }
         .login-card h2 { font-size: 1.3rem; margin-bottom: 24px; color: #fff; letter-spacing: 0.02em; }
@@ -394,80 +385,48 @@
     <div id="modal-container"></div>
 
     <script>
-    // ========== CONFIGURAÇÃO SUPABASE ==========
-    const SUPABASE_URL = 'https://rtzsmjchpkzktqnykwnq.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_0DePAaegQ6PEELq9N9M6wg_TdubVqho';
+        // ========== CONFIGURAÇÃO SUPABASE ==========
+        const SUPABASE_URL = 'https://rtzsmjchpkzktqnykwnq.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_0DePAaegQ6PEELq9N9M6wg_TdubVqho';
 
-    // Aguarda a SDK ser carregada e cria o cliente
-    let supabase;
-    function initSupabase() {
+        // Verificar SDK
         if (typeof window.supabase === 'undefined') {
-            document.body.innerHTML = '<h1 style="color:red;text-align:center;margin-top:100px;">Erro: SDK do Supabase não carregou. Verifique sua conexão e tente novamente.</h1>';
+            document.body.innerHTML = '<h1 style="color:red;text-align:center;margin-top:100px;">Erro crítico: SDK do Supabase não carregou.</h1>';
             throw new Error('SDK não carregada');
         }
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
-    // Tenta inicializar imediatamente, caso o script já tenha carregado
-    initSupabase();
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase inicializado', supabase);
 
-    // ========== ESTADO ==========
-    let products = [], stock = {}, purchaseHistory = [], cartItems = [], purchaseLines = [], pending = [], pendCount = 0;
+        // ========== ESTADO ==========
+        let products = [], stock = {}, purchaseHistory = [], cartItems = [], purchaseLines = [], pending = [], pendCount = 0;
 
-    // ========== AUTENTICAÇÃO ==========
-    const VALID_USER = 'deise';
-    const isAuth = () => sessionStorage.getItem('auth') === '1';
-    const auth = () => sessionStorage.setItem('auth', '1');
-    const deauth = () => sessionStorage.removeItem('auth');
+        // ========== AUTENTICAÇÃO ==========
+        const VALID_USER = 'deise';
+        const isAuth = () => sessionStorage.getItem('auth') === '1';
+        const auth = () => sessionStorage.setItem('auth', '1');
+        const deauth = () => sessionStorage.removeItem('auth');
 
-    // Função de login com tratamento de erro
-    async function checkCredentials(username, password) {
-        try {
-            if (!supabase) throw new Error('Cliente Supabase não inicializado.');
-            const { data, error } = await supabase
-                .from('app_users')
-                .select('password')
-                .eq('username', username)
-                .single();
-            if (error) {
-                console.error('Erro ao buscar usuário:', error);
-                toast('Erro no banco de dados: ' + error.message, 'error');
+        async function checkCredentials(username, password) {
+            try {
+                console.log('🔍 Verificando credenciais para:', username);
+                const { data, error } = await supabase
+                    .from('app_users')
+                    .select('password')
+                    .eq('username', username)
+                    .single();
+                if (error) {
+                    console.error('❌ Erro na consulta:', error);
+                    document.getElementById('login-error').textContent = 'Erro no banco: ' + error.message;
+                    return false;
+                }
+                console.log('📦 Dados recebidos:', data);
+                return data && data.password === password;
+            } catch (err) {
+                console.error('❌ Exceção:', err);
+                document.getElementById('login-error').textContent = 'Erro de conexão.';
                 return false;
             }
-            return data && data.password === password;
-        } catch (err) {
-            console.error('Exceção na consulta:', err);
-            toast('Erro de conexão com o servidor.', 'error');
-            return false;
         }
-    }
-
-    // ... (o restante do JavaScript permanece igual ao arquivo completo anterior, 
-    //      incluindo loadData, saveAll, renderização das abas, etc.)
-    // Certifique-se de copiar todas as funções da versão completa que enviei.
-</script>
-
-        // ========== UTILITÁRIOS ==========
-        const toastContainer = document.getElementById('toast-container');
-        const modalContainer = document.getElementById('modal-container');
-        function toast(msg, type) {
-            const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
-            toastContainer.appendChild(t); setTimeout(() => t.remove(), 3000);
-        }
-        function openModal(title, html, btns) {
-            const ov = document.createElement('div'); ov.className = 'modal-overlay';
-            ov.innerHTML = `<div class="modal-dialog"><h3>${title}</h3><div>${html}</div><div class="modal-buttons">${btns.map(b => `<button class="${b.cls}" data-modal-action="${b.act}">${b.lbl}</button>`).join('')}</div></div>`;
-            modalContainer.appendChild(ov);
-            ov.addEventListener('click', e => { if (e.target === ov) closeModal(); });
-            return ov;
-        }
-        function closeModal() { modalContainer.innerHTML = ''; }
-        function modalResult(ov, cb) {
-            ov.querySelectorAll('[data-modal-action]').forEach(b => b.addEventListener('click', function() { cb(this.dataset.modalAction); }));
-        }
-        function fmt(v) { return 'R$ ' + (Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
-        function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
-        function nextId() { return products.length ? Math.max(...products.map(p => p.id)) + 1 : 1; }
-        function active() { return products.filter(p => p.active !== false); }
 
         // ========== LOGIN ==========
         function showApp() {
@@ -482,18 +441,25 @@
             document.getElementById('app-header').style.display = 'none';
             document.getElementById('main-content').style.display = 'none';
             document.querySelector('footer').style.display = 'none';
-            document.getElementById('login-usuario').value = '';
-            document.getElementById('login-senha').value = '';
-            document.getElementById('login-error').textContent = '';
         }
         async function tryLogin() {
             const u = document.getElementById('login-usuario').value.trim().toLowerCase();
             const p = document.getElementById('login-senha').value.trim();
-            if (!u || !p) { document.getElementById('login-error').textContent = 'Preencha todos os campos.'; return; }
+            if (!u || !p) {
+                document.getElementById('login-error').textContent = 'Preencha todos os campos.';
+                return;
+            }
             document.getElementById('login-error').textContent = 'Verificando...';
+            console.log('⏳ Tentando login...');
             const ok = await checkCredentials(u, p);
-            if (ok) { auth(); showApp(); }
-            else { document.getElementById('login-error').textContent = 'Usuário ou senha inválidos.'; }
+            if (ok) {
+                console.log('✅ Login bem-sucedido');
+                auth();
+                showApp();
+            } else {
+                console.log('❌ Credenciais inválidas');
+                document.getElementById('login-error').textContent = 'Usuário ou senha inválidos.';
+            }
         }
         document.getElementById('btn-login').addEventListener('click', tryLogin);
         document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
@@ -526,12 +492,65 @@
                     if (!data || data.password !== sa) { toast('Senha atual incorreta.', 'error'); return; }
                     if (!sn) { toast('Nova senha obrigatória.', 'error'); return; }
                     if (sn !== sc) { toast('Confirmação não coincide.', 'error'); return; }
-                    const ok = await updatePasswordInDB(sn);
-                    if (ok) { closeModal(); toast('Senha alterada!', 'success'); }
-                    else { toast('Erro ao alterar senha.', 'error'); }
+                    await supabase.from('app_users').update({ password: sn }).eq('username', VALID_USER);
+                    closeModal(); toast('Senha alterada!', 'success');
                 } else closeModal();
             });
         });
+
+        // ========== DADOS ==========
+        async function loadData() {
+            try {
+                const [prodRes, stockRes, histRes] = await Promise.all([
+                    supabase.from('products').select('*'),
+                    supabase.from('stock').select('*'),
+                    supabase.from('purchase_history').select('*').order('date', { ascending: false })
+                ]);
+                products = prodRes.data || [];
+                stock = {};
+                (stockRes.data || []).forEach(s => stock[s.product_id] = { quantidade: s.quantidade, valor: s.valor });
+                products.forEach(p => { if (!stock[p.id]) stock[p.id] = { quantidade: 0, valor: 0 }; });
+                purchaseHistory = histRes.data || [];
+            } catch (err) {
+                console.error('Erro ao carregar:', err);
+            }
+        }
+        async function saveAll() {
+            try {
+                await supabase.from('products').delete().neq('id', 0);
+                if (products.length) await supabase.from('products').insert(products.map(p => ({ id:p.id, descricao:p.descricao, minimo:p.minimo, ideal:p.ideal, active:p.active })));
+                const sa = Object.entries(stock).map(([id, s]) => ({ product_id: +id, quantidade: s.quantidade, valor: s.valor }));
+                await supabase.from('stock').delete().neq('product_id', 0);
+                if (sa.length) await supabase.from('stock').insert(sa);
+                await supabase.from('purchase_history').delete().neq('id', 0);
+                if (purchaseHistory.length) await supabase.from('purchase_history').insert(purchaseHistory);
+            } catch (err) {
+                console.error('Erro ao salvar:', err);
+            }
+        }
+
+        // ========== UTILITÁRIOS ==========
+        const toastContainer = document.getElementById('toast-container');
+        const modalContainer = document.getElementById('modal-container');
+        function toast(msg, type) {
+            const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
+            toastContainer.appendChild(t); setTimeout(() => t.remove(), 3000);
+        }
+        function openModal(title, html, btns) {
+            const ov = document.createElement('div'); ov.className = 'modal-overlay';
+            ov.innerHTML = `<div class="modal-dialog"><h3>${title}</h3><div>${html}</div><div class="modal-buttons">${btns.map(b => `<button class="${b.cls}" data-modal-action="${b.act}">${b.lbl}</button>`).join('')}</div></div>`;
+            modalContainer.appendChild(ov);
+            ov.addEventListener('click', e => { if (e.target === ov) closeModal(); });
+            return ov;
+        }
+        function closeModal() { modalContainer.innerHTML = ''; }
+        function modalResult(ov, cb) {
+            ov.querySelectorAll('[data-modal-action]').forEach(b => b.addEventListener('click', function() { cb(this.dataset.modalAction); }));
+        }
+        function fmt(v) { return 'R$ ' + (Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
+        function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+        function nextId() { return products.length ? Math.max(...products.map(p => p.id)) + 1 : 1; }
+        function active() { return products.filter(p => p.active !== false); }
 
         // ========== NAVEGAÇÃO ==========
         function switchTab(tab) {
