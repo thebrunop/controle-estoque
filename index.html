@@ -497,7 +497,9 @@
         }
         document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
         function renderEstoque() {
-            const ativos = active();
+            const ativos = active().sort((a, b) =>
+    a.descricao.localeCompare(b.descricao, 'pt-BR')
+);
             if (!ativos.length) {
                 document.getElementById('estoque-tbody').innerHTML = '';
                 document.getElementById('estoque-vazio').style.display = 'block';
