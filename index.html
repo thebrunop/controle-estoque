@@ -459,8 +459,23 @@
                 const sa = Object.entries(stock).map(([id, s]) => ({ product_id: +id, quantidade: s.quantidade, valor: s.valor }));
                 await supabaseClient.from('stock').delete().neq('product_id', 0);
                 if (sa.length) await supabaseClient.from('stock').insert(sa);
-                await supabaseClient.from('purchase_history').delete().neq('id', 0);
-                if (purchaseHistory.length) await supabaseClient.from('purchase_history').insert(purchaseHistory);
+                const { error: deleteError } =
+    await supabaseClient
+        .from('purchase_history')
+        .delete()
+        .neq('id', 0);
+
+console.log('DELETE purchase_history:', deleteError);
+
+if (purchaseHistory.length) {
+    const { data, error } =
+        await supabaseClient
+            .from('purchase_history')
+            .insert(purchaseHistory);
+
+    console.log('INSERT DATA:', data);
+    console.log('INSERT ERROR:', error);
+}
             } catch (err) { console.error(err); }
         }
         const toastContainer = document.getElementById('toast-container');
