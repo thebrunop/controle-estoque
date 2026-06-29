@@ -446,7 +446,10 @@
                 stock = {};
                 (stockRes.data || []).forEach(s => stock[s.product_id] = { quantidade: s.quantidade, valor: s.valor });
                 products.forEach(p => { if (!stock[p.id]) stock[p.id] = { quantidade: 0, valor: 0 }; });
-                purchaseHistory = histRes.data || [];
+                purchaseHistory = (histRes.data || []).map(h => ({
+    ...h,
+    productId: h.product_id
+}));
             } catch (err) { console.error(err); }
         }
         async function saveAll() {
