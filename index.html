@@ -632,7 +632,7 @@ if (purchaseHistory.length) {
                 if (!p) { er.push(`Produto "${l.descricao}" não encontrado.`); return; }
                 if (!stock[p.id]) stock[p.id] = { quantidade:0, valor:0 };
                 stock[p.id].quantidade += l.quantidade; stock[p.id].valor = l.valor;
-                purchaseHistory.push({ productId:p.id, date:now, quantity:l.quantidade, value:l.valor });
+                purchaseHistory.push({ product_id:p.id, date:now, quantity:l.quantidade, value:l.valor });
             });
             if (er.length) { toast(er.join(' '), 'error'); return; }
             purchaseLines = []; await saveAll(); renderCompras(); toast('Compra salva!', 'success');
