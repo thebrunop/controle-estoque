@@ -123,20 +123,19 @@
         tbody td { padding: 8px 4px; text-align: center; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tbody tr:hover { background: rgba(255,255,255,0.025); }
         tbody tr:last-child td { border-bottom: none; }
-        .estoque-numero {
-            display: inline-block; min-width: 36px; padding: 5px 10px;
-            border-radius: 6px; font-weight: 700; color: #000; text-align: center;
-        }
+        /* Cores de fundo (as mesmas usadas antes) */
         .bg-preta { background: #1a1a1a; color: #ccc; }
         .bg-vermelha { background: var(--vermelho-bg); color: #000; }
         .bg-amarela { background: var(--amarelo-bg); color: #000; }
         .bg-verde { background: var(--verde-bg); color: #000; }
+
         .btn-menos, .btn-mais {
             width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
             font-weight: 700; font-size: 1.1rem; line-height: 1; color: #fff;
             transition: all var(--transition); display: inline-flex; align-items: center;
             justify-content: center; font-family: var(--font);
             touch-action: manipulation;
+            flex-shrink: 0;
         }
         .btn-menos { background: var(--vermelho-btn); }
         .btn-menos:hover { background: #8a0a0a; transform: scale(1.08); }
@@ -159,6 +158,7 @@
         .estoque-cell {
             display: flex; align-items: center; justify-content: center; gap: 4px;
         }
+        /* Input editável que herda a cor de fundo da classe bg-* */
         .estoque-input {
             width: 56px;
             padding: 6px 0;
@@ -167,9 +167,9 @@
             font-size: 0.95rem;
             border: 2px solid transparent;
             border-radius: var(--radius-sm);
-            background: transparent;
-            color: #000;
-            transition: border-color var(--transition), background var(--transition);
+            /* Não define background aqui – a classe bg-* vai definir */
+            color: inherit; /* herda da classe */
+            transition: border-color var(--transition), box-shadow var(--transition);
             font-family: var(--font);
             -moz-appearance: textfield;
             appearance: textfield;
@@ -179,11 +179,13 @@
             -webkit-appearance: none;
             margin: 0;
         }
+        /* Quando em foco, mantém o fundo da classe mas adiciona um destaque */
         .estoque-input:focus {
             border-color: var(--azul);
-            background: rgba(255,255,255,0.15);
+            box-shadow: 0 0 0 2px rgba(114,175,255,0.4);
             outline: none;
         }
+
         input[type="text"], input[type="number"], input[type="password"] {
             background: var(--bg-input); border: 1px solid var(--border); color: #fff;
             padding: 8px 10px; border-radius: var(--radius-sm); font-family: var(--font);
@@ -271,7 +273,7 @@
             main { margin-top: 72px; padding: 6px 4px; }
             table { min-width: 480px; font-size: 0.7rem; }
             .modal-dialog { min-width: 260px; padding: 14px; }
-            .estoque-input { width: 48px; font-size: 0.85rem; }
+            .estoque-input { width: 48px; font-size: 0.85rem; padding: 4px 0; }
             .btn-menos, .btn-mais, .btn-excluir { width: 28px; height: 28px; font-size: 0.9rem; }
             .totalizadores { font-size: 0.75rem; padding: 10px 14px; gap: 12px; }
             .carrinho-total { font-size: 0.75rem; padding: 4px 10px; }
@@ -594,7 +596,6 @@ if (purchaseHistory.length) {
             const q = Number(novoValor);
             if (isNaN(q) || q < 0) {
                 toast('Valor inválido.', 'error');
-                // Reverte o input para o valor anterior
                 renderEstoque();
                 return;
             }
@@ -860,7 +861,6 @@ if (purchaseHistory.length) {
                     cartItems[i].comprar = val;
                     renderCarrinho();
                 } else {
-                    // Reverte para o valor anterior
                     renderCarrinho();
                 }
             }
@@ -875,9 +875,6 @@ if (purchaseHistory.length) {
                 }
             }
         });
-
-        // Também escuta 'input' para atualizar em tempo real (opcional, mas pode ser mais responsivo)
-        // Mas como 'change' já é suficiente, usamos apenas 'change' para não sobrecarregar.
 
         document.getElementById('main-content').addEventListener('input', e => {
             const t = e.target, a = t.dataset.action;
