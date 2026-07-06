@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Controle de Estoque</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -68,56 +68,59 @@
             position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
             background: #16162a; border-bottom: 2px solid var(--border);
             box-shadow: var(--shadow); display: flex; align-items: center;
-            justify-content: space-between; padding: 0 20px; height: var(--header-height);
-            gap: 12px; flex-wrap: wrap;
+            justify-content: space-between; padding: 0 12px; height: var(--header-height);
+            gap: 6px; flex-wrap: wrap;
         }
-        .header-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-        .header-left svg { width: 28px; height: 28px; color: var(--azul); flex-shrink: 0; }
-        .header-left h1 { font-size: 1.2rem; font-weight: 600; color: #fff; letter-spacing: 0.02em; white-space: nowrap; }
-        nav { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; }
+        .header-left { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .header-left svg { width: 24px; height: 24px; color: var(--azul); flex-shrink: 0; }
+        .header-left h1 { font-size: 1rem; font-weight: 600; color: #fff; letter-spacing: 0.02em; white-space: nowrap; }
+        nav { display: flex; gap: 2px; flex-shrink: 0; flex-wrap: wrap; }
         nav button {
-            background: var(--azul); color: #0d1b2a; border: none; padding: 8px 14px;
-            border-radius: var(--radius); cursor: pointer; font-weight: 600; font-size: 0.82rem;
+            background: var(--azul); color: #0d1b2a; border: none; padding: 6px 10px;
+            border-radius: var(--radius); cursor: pointer; font-weight: 600; font-size: 0.7rem;
             font-family: var(--font); letter-spacing: 0.03em; transition: all var(--transition); white-space: nowrap;
         }
         nav button:hover { filter: brightness(1.1); transform: translateY(-1px); }
         nav button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
         nav button.active { background: var(--laranja); color: #fff; box-shadow: 0 0 16px rgba(255,136,45,0.45); transform: scale(1.04); }
-        .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
         .btn-change-password, .btn-logout {
-            width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+            width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
             background: transparent; color: #ccc; transition: all var(--transition);
             display: flex; align-items: center; justify-content: center;
         }
         .btn-change-password:hover { background: rgba(255,255,255,0.1); color: #fff; }
         .btn-logout:hover { background: rgba(255,50,50,0.2); color: #ff5555; }
         main {
-            flex: 1; margin-top: var(--header-height); padding: 20px; padding-bottom: 12px;
+            flex: 1; margin-top: var(--header-height); padding: 12px 8px; padding-bottom: 12px;
             width: 100%; max-width: 1400px; margin-left: auto; margin-right: auto;
         }
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+        .toolbar {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+        }
         .toolbar .btn-branco {
-            background: var(--branco); color: #1a1a2e; border: none; padding: 9px 20px;
-            border-radius: var(--radius); cursor: pointer; font-weight: 700; font-size: 0.88rem;
+            background: var(--branco); color: #1a1a2e; border: none; padding: 8px 14px;
+            border-radius: var(--radius); cursor: pointer; font-weight: 700; font-size: 0.8rem;
             font-family: var(--font); letter-spacing: 0.03em; transition: all var(--transition);
             box-shadow: 0 1px 4px rgba(0,0,0,0.25); white-space: nowrap;
         }
         .toolbar .btn-branco:hover { filter: brightness(0.92); transform: translateY(-1px); }
-        .toolbar-center { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .toolbar-center { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .table-wrapper {
             overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border);
-            background: var(--bg-card); box-shadow: var(--shadow); margin-bottom: 20px;
+            background: var(--bg-card); box-shadow: var(--shadow); margin-bottom: 16px;
+            -webkit-overflow-scrolling: touch;
         }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; font-size: 0.88rem; }
+        table { width: 100%; border-collapse: collapse; min-width: 650px; font-size: 0.8rem; }
         thead th {
-            background: #1f1f38; color: #ccc; padding: 12px 8px; text-align: center;
-            font-weight: 600; font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase;
+            background: #1f1f38; color: #ccc; padding: 10px 6px; text-align: center;
+            font-weight: 600; font-size: 0.7rem; letter-spacing: 0.04em; text-transform: uppercase;
             border-bottom: 2px solid var(--border); white-space: nowrap;
         }
-        tbody td { padding: 10px 6px; text-align: center; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tbody td { padding: 8px 4px; text-align: center; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tbody tr:hover { background: rgba(255,255,255,0.025); }
         tbody tr:last-child td { border-bottom: none; }
         .estoque-numero {
@@ -129,43 +132,72 @@
         .bg-amarela { background: var(--amarelo-bg); color: #000; }
         .bg-verde { background: var(--verde-bg); color: #000; }
         .btn-menos, .btn-mais {
-            width: 28px; height: 28px; border-radius: 50%; border: none; cursor: pointer;
-            font-weight: 700; font-size: 1rem; line-height: 1; color: #fff;
+            width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
+            font-weight: 700; font-size: 1.1rem; line-height: 1; color: #fff;
             transition: all var(--transition); display: inline-flex; align-items: center;
             justify-content: center; font-family: var(--font);
+            touch-action: manipulation;
         }
         .btn-menos { background: var(--vermelho-btn); }
         .btn-menos:hover { background: #8a0a0a; transform: scale(1.08); }
         .btn-mais { background: var(--verde-btn); }
         .btn-mais:hover { background: #0e5a1e; transform: scale(1.08); }
         .btn-excluir {
-            width: 28px; height: 28px; border-radius: 50%; border: none; cursor: pointer;
+            width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
             font-weight: 700; font-size: 0.85rem; background: #c0392b; color: #fff;
             transition: all var(--transition); display: inline-flex; align-items: center;
             justify-content: center; font-family: var(--font);
+            touch-action: manipulation;
         }
         .btn-excluir:hover { background: #922b21; transform: scale(1.08); }
         .btn-editar {
-            width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
+            width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
             font-size: 1rem; background: transparent; color: #ddd; transition: all var(--transition);
             display: inline-flex; align-items: center; justify-content: center;
         }
         .btn-editar:hover { background: rgba(255,255,255,0.1); color: #fff; transform: scale(1.1); }
-        .estoque-cell { display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .estoque-cell {
+            display: flex; align-items: center; justify-content: center; gap: 4px;
+        }
+        .estoque-input {
+            width: 56px;
+            padding: 6px 0;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: 2px solid transparent;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            color: #000;
+            transition: border-color var(--transition), background var(--transition);
+            font-family: var(--font);
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        .estoque-input::-webkit-outer-spin-button,
+        .estoque-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .estoque-input:focus {
+            border-color: var(--azul);
+            background: rgba(255,255,255,0.15);
+            outline: none;
+        }
         input[type="text"], input[type="number"], input[type="password"] {
             background: var(--bg-input); border: 1px solid var(--border); color: #fff;
             padding: 8px 10px; border-radius: var(--radius-sm); font-family: var(--font);
-            font-size: 0.88rem; max-width: 180px; transition: border-color var(--transition);
+            font-size: 0.85rem; max-width: 160px; transition: border-color var(--transition);
         }
         input:focus { border-color: var(--azul); outline: none; box-shadow: 0 0 0 2px rgba(114,175,255,0.2); }
         input::placeholder { color: #666; font-style: italic; }
         .form-row {
-            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-            padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: var(--radius); margin-bottom: 8px;
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+            padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); margin-bottom: 6px;
         }
-        .form-row input { max-width: 180px; }
-        .form-row label { font-size: 0.78rem; color: var(--text-secondary); white-space: nowrap; }
+        .form-row input { max-width: 140px; }
+        .form-row label { font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; }
         .field-group { display: flex; align-items: center; gap: 4px; }
         .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -180,12 +212,14 @@
         input:checked + .slider { background-color: var(--verde-btn); }
         input:checked + .slider:before { transform: translateX(22px); }
         .totalizadores {
-            display: flex; gap: 30px; flex-wrap: wrap; background: var(--bg-card);
-            padding: 14px 22px; border-radius: var(--radius); border: 1px solid var(--border); font-weight: 600;
+            display: flex; gap: 20px; flex-wrap: wrap; background: var(--bg-card);
+            padding: 12px 18px; border-radius: var(--radius); border: 1px solid var(--border); font-weight: 600;
+            font-size: 0.85rem;
         }
         .carrinho-total {
-            background: var(--bg-input); padding: 8px 16px; border-radius: var(--radius);
+            background: var(--bg-input); padding: 6px 14px; border-radius: var(--radius);
             font-weight: 700; color: var(--laranja); white-space: nowrap; border: 1px solid var(--border);
+            font-size: 0.85rem;
         }
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -196,15 +230,16 @@
         @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
         .modal-dialog {
             background: var(--bg-card); border: 2px solid var(--border); border-radius: 12px;
-            padding: 24px; min-width: 380px; max-width: 90vw;
+            padding: 20px; min-width: 300px; max-width: 90vw;
             box-shadow: 0 8px 32px rgba(0,0,0,0.6); animation: popIn 0.25s ease;
         }
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-dialog h3 { margin-bottom: 18px; color: #fff; text-align: center; letter-spacing: 0.03em; }
-        .modal-buttons { display: flex; gap: 14px; justify-content: center; margin-top: 20px; }
+        .modal-dialog h3 { margin-bottom: 16px; color: #fff; text-align: center; letter-spacing: 0.03em; font-size: 1.1rem; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
         .modal-buttons button {
-            padding: 10px 28px; border-radius: var(--radius); border: none; cursor: pointer;
+            padding: 10px 20px; border-radius: var(--radius); border: none; cursor: pointer;
             font-weight: 700; font-family: var(--font); transition: all var(--transition);
+            font-size: 0.9rem;
         }
         .btn-salvar-modal { background: var(--verde-btn); color: #fff; }
         .btn-salvar-modal:hover { background: #0e5a1e; }
@@ -213,11 +248,12 @@
         .btn-excluir-modal { background: #c0392b; color: #fff; }
         .btn-excluir-modal:hover { background: #922b21; }
         .toast {
-            position: fixed; top: 70px; right: 20px; z-index: 4000;
-            padding: 12px 20px; border-radius: var(--radius); color: #fff; font-weight: 600;
+            position: fixed; top: 70px; right: 12px; z-index: 4000;
+            padding: 10px 16px; border-radius: var(--radius); color: #fff; font-weight: 600;
             box-shadow: 0 4px 16px rgba(0,0,0,0.4);
             animation: slideInRight 0.35s ease, fadeOutRight 0.35s ease 2.5s forwards;
-            max-width: 400px;
+            max-width: 90vw;
+            font-size: 0.85rem;
         }
         .toast.success { background: #2e7d32; }
         .toast.error { background: #c62828; }
@@ -225,16 +261,20 @@
         @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeOutRight { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(60%); } }
         footer {
-            text-align: center; padding: 10px 16px; font-size: 0.78rem; color: #888;
+            text-align: center; padding: 8px 12px; font-size: 0.7rem; color: #888;
             background: #16162a; border-top: 1px solid var(--border);
             letter-spacing: 0.05em; height: var(--footer-height);
         }
         @media (max-width: 768px) {
-            header { padding: 0 8px; height: auto; min-height: 50px; }
-            nav button { padding: 5px 9px; font-size: 0.7rem; }
-            main { margin-top: 80px; padding: 8px; }
-            table { min-width: 500px; font-size: 0.75rem; }
-            .modal-dialog { min-width: 280px; padding: 16px; }
+            header { padding: 0 6px; height: auto; min-height: 48px; }
+            nav button { padding: 4px 8px; font-size: 0.6rem; }
+            main { margin-top: 72px; padding: 6px 4px; }
+            table { min-width: 480px; font-size: 0.7rem; }
+            .modal-dialog { min-width: 260px; padding: 14px; }
+            .estoque-input { width: 48px; font-size: 0.85rem; }
+            .btn-menos, .btn-mais, .btn-excluir { width: 28px; height: 28px; font-size: 0.9rem; }
+            .totalizadores { font-size: 0.75rem; padding: 10px 14px; gap: 12px; }
+            .carrinho-total { font-size: 0.75rem; padding: 4px 10px; }
         }
     </style>
 </head>
@@ -265,19 +305,19 @@
         </div>
         <nav>
             <button data-tab="estoque" class="active">Estoque</button>
-            <button data-tab="carrinho">Carrinho de Compras</button>
+            <button data-tab="carrinho">Carrinho</button>
             <button data-tab="compras">Compras</button>
             <button data-tab="historico">Histórico</button>
             <button data-tab="produtos">Produtos</button>
         </nav>
         <div class="header-actions">
             <button class="btn-change-password" id="btn-change-password" title="Alterar senha">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
                 </svg>
             </button>
             <button class="btn-logout" id="btn-logout" title="Sair">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ff4444" stroke-width="2">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ff4444" stroke-width="2">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                     <polyline points="16 17 21 12 16 7"/>
                     <line x1="21" y1="12" x2="9" y2="12"/>
@@ -290,7 +330,7 @@
         <section class="tab-content active" id="tab-estoque">
             <div class="table-wrapper">
                 <table>
-                    <thead><tr><th>Descrição</th><th>Estoque Mínimo</th><th>Estoque Ideal</th><th>Estoque Atual</th><th>Valor</th><th>Valor Total</th></tr></thead>
+                    <thead><tr><th>Descrição</th><th>Mínimo</th><th>Ideal</th><th>Estoque Atual</th><th>Valor</th><th>Valor Total</th></tr></thead>
                     <tbody id="estoque-tbody"></tbody>
                 </table>
             </div>
@@ -338,7 +378,7 @@
                 </div>
                 <div class="toolbar-center">
                     <span>📊 <strong>Valor Médio:</strong></span>
-                    <span id="valor-medio-historico" style="background:var(--bg-input);padding:6px 14px;border-radius:var(--radius-sm);font-weight:700;color:var(--laranja);">R$ 0,00</span>
+                    <span id="valor-medio-historico" style="background:var(--bg-input);padding:6px 12px;border-radius:var(--radius-sm);font-weight:700;color:var(--laranja);font-size:0.85rem;">R$ 0,00</span>
                 </div>
             </div>
             <div class="table-wrapper">
@@ -447,9 +487,9 @@
                 (stockRes.data || []).forEach(s => stock[s.product_id] = { quantidade: s.quantidade, valor: s.valor });
                 products.forEach(p => { if (!stock[p.id]) stock[p.id] = { quantidade: 0, valor: 0 }; });
                 purchaseHistory = (histRes.data || []).map(h => ({
-    ...h,
-    productId: h.product_id
-}));
+                    ...h,
+                    productId: h.product_id
+                }));
             } catch (err) { console.error(err); }
         }
         async function saveAll() {
@@ -514,10 +554,10 @@ if (purchaseHistory.length) {
             else if (tab === 'produtos') renderProdutos();
         }
         document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+        // ------------------- ESTOQUE -------------------
         function renderEstoque() {
-            const ativos = active().sort((a, b) =>
-    a.descricao.localeCompare(b.descricao, 'pt-BR')
-);
+            const ativos = active().sort((a, b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
             if (!ativos.length) {
                 document.getElementById('estoque-tbody').innerHTML = '';
                 document.getElementById('estoque-vazio').style.display = 'block';
@@ -535,18 +575,45 @@ if (purchaseHistory.length) {
                 else if (q>mn && q<=id) bg='bg-amarela';
                 else if (q>id) bg='bg-verde';
                 tQ += q; tV += q*v;
-                html += `<tr><td>${esc(p.descricao)}</td><td>${mn}</td><td>${id}</td><td><div class="estoque-cell"><button class="btn-menos" data-action="estoque-menos" data-id="${p.id}">−</button><span class="estoque-numero ${bg}">${q}</span></div></td><td>${fmt(v)}</td><td>${fmt(q*v)}</td></tr>`;
+                html += `<tr><td>${esc(p.descricao)}</td><td>${mn}</td><td>${id}</td>
+                    <td><div class="estoque-cell">
+                        <button class="btn-menos" data-action="estoque-menos" data-id="${p.id}">−</button>
+                        <input type="number" class="estoque-input ${bg}" value="${q}" 
+                               data-action="estoque-input" data-id="${p.id}" 
+                               min="0" step="1" inputmode="numeric">
+                        <button class="btn-mais" data-action="estoque-mais" data-id="${p.id}">+</button>
+                    </div></td>
+                    <td>${fmt(v)}</td><td>${fmt(q*v)}</td></tr>`;
             });
             document.getElementById('estoque-tbody').innerHTML = html;
             document.getElementById('estoque-total-qtd').textContent = tQ;
             document.getElementById('estoque-total-valor').textContent = fmt(tV);
         }
+
+        async function setEstoque(id, novoValor) {
+            const q = Number(novoValor);
+            if (isNaN(q) || q < 0) {
+                toast('Valor inválido.', 'error');
+                // Reverte o input para o valor anterior
+                renderEstoque();
+                return;
+            }
+            if (!stock[id]) stock[id] = { quantidade: 0, valor: 0 };
+            stock[id].quantidade = q;
+            await saveAll();
+            renderEstoque();
+        }
+
         async function altEstoque(id, d) {
             if (!stock[id]) stock[id] = { quantidade:0, valor:0 };
             const n = stock[id].quantidade + d;
             if (n < 0) { toast('Estoque não pode ser negativo.', 'info'); return; }
-            stock[id].quantidade = n; await saveAll(); renderEstoque();
+            stock[id].quantidade = n;
+            await saveAll();
+            renderEstoque();
         }
+
+        // ------------------- CARRINHO -------------------
         function renderCarrinho() {
             if (!cartItems.length) {
                 document.getElementById('carrinho-tbody').innerHTML = '';
@@ -558,11 +625,21 @@ if (purchaseHistory.length) {
             let html='', tot=0;
             cartItems.forEach((it,i) => {
                 const vf = it.comprar * it.valorUnitario; tot += vf;
-                html += `<tr><td>${esc(it.descricao)}</td><td>${it.qtdMinimo}</td><td>${fmt(it.valorMinimo)}</td><td>${it.qtdIdeal}</td><td>${fmt(it.valorIdeal)}</td><td><div class="estoque-cell"><button class="btn-menos" data-action="carrinho-menos" data-index="${i}">−</button><span class="estoque-numero bg-preta">${it.comprar}</span><button class="btn-mais" data-action="carrinho-mais" data-index="${i}">+</button></div></td><td>${fmt(vf)}</td></tr>`;
+                html += `<tr><td>${esc(it.descricao)}</td><td>${it.qtdMinimo}</td><td>${fmt(it.valorMinimo)}</td>
+                    <td>${it.qtdIdeal}</td><td>${fmt(it.valorIdeal)}</td>
+                    <td><div class="estoque-cell">
+                        <button class="btn-menos" data-action="carrinho-menos" data-index="${i}">−</button>
+                        <input type="number" class="estoque-input bg-preta" value="${it.comprar}" 
+                               data-action="carrinho-input" data-index="${i}" 
+                               min="0" step="1" inputmode="numeric">
+                        <button class="btn-mais" data-action="carrinho-mais" data-index="${i}">+</button>
+                    </div></td>
+                    <td>${fmt(vf)}</td></tr>`;
             });
             document.getElementById('carrinho-tbody').innerHTML = html;
             document.getElementById('carrinho-totalizador').textContent = `Total: ${fmt(tot)}`;
         }
+
         function sugerir() {
             const ativos = active();
             if (!ativos.length) { toast('Nenhum produto ativo.', 'info'); return; }
@@ -578,13 +655,24 @@ if (purchaseHistory.length) {
             else toast(`Carrinho gerado com ${cartItems.length} itens.`, 'success');
             renderCarrinho();
         }
-        function altCarrinho(i, d) { if (cartItems[i]) { const n = cartItems[i].comprar + d; if (n>=0) { cartItems[i].comprar = n; renderCarrinho(); } } }
+
+        function altCarrinho(i, d) {
+            if (cartItems[i]) {
+                const n = cartItems[i].comprar + d;
+                if (n >= 0) {
+                    cartItems[i].comprar = n;
+                    renderCarrinho();
+                }
+            }
+        }
+
         function comprarCarrinho() {
             const it = cartItems.filter(i => i.comprar>0);
             if (!it.length) { toast('Ajuste a coluna Comprar.', 'info'); return; }
             purchaseLines = it.map(i => ({ descricao: i.descricao, quantidade: i.comprar, valor: 0 }));
             toast('Transferido para Compras.', 'success'); switchTab('compras');
         }
+
         function enviarCarrinho() {
             const it = cartItems.filter(i => i.comprar>0);
             if (!it.length) { toast('Ajuste a coluna Comprar.', 'info'); return; }
@@ -593,6 +681,8 @@ if (purchaseHistory.length) {
             msg += `\n💰 Total: ${fmt(t)}`;
             if (confirm('Enviar WhatsApp?\n\n'+it.map(i=>`• ${i.descricao}: ${i.comprar} un`).join('\n'))) window.open(`https://wa.me/5531993066079?text=${encodeURIComponent(msg)}`, '_blank');
         }
+
+        // ------------------- COMPRAS -------------------
         function renderCompras() {
             if (!purchaseLines.length) { document.getElementById('compras-tbody').innerHTML = ''; document.getElementById('compras-vazio').style.display = 'block'; return; }
             document.getElementById('compras-vazio').style.display = 'none';
@@ -600,11 +690,18 @@ if (purchaseHistory.length) {
             document.getElementById('compras-tbody').innerHTML = purchaseLines.map((l,i) => `
                 <tr>
                     <td><input type="text" list="cdl${i}" value="${esc(l.descricao)}" data-action="compra-desc" data-index="${i}"><datalist id="cdl${i}">${opts}</datalist></td>
-                    <td><div class="estoque-cell"><button class="btn-menos" data-action="compra-menos" data-index="${i}">−</button><span class="estoque-numero bg-preta">${l.quantidade}</span><button class="btn-mais" data-action="compra-mais" data-index="${i}">+</button></div></td>
-                    <td><input type="number" step="0.01" value="${l.valor}" data-action="compra-valor" data-index="${i}" style="max-width:120px;"></td>
+                    <td><div class="estoque-cell">
+                        <button class="btn-menos" data-action="compra-menos" data-index="${i}">−</button>
+                        <input type="number" class="estoque-input bg-preta" value="${l.quantidade}" 
+                               data-action="compra-input" data-index="${i}" 
+                               min="0" step="1" inputmode="numeric">
+                        <button class="btn-mais" data-action="compra-mais" data-index="${i}">+</button>
+                    </div></td>
+                    <td><input type="number" step="0.01" value="${l.valor}" data-action="compra-valor" data-index="${i}" style="max-width:110px;" inputmode="decimal"></td>
                     <td><button class="btn-excluir" data-action="compras-excluir" data-index="${i}">✕</button></td>
                 </tr>`).join('');
         }
+
         function syncCompras() {
             document.querySelectorAll('#compras-tbody tr').forEach(r => {
                 const i = parseInt(r.querySelector('[data-action="compra-desc"]')?.dataset.index);
@@ -614,10 +711,12 @@ if (purchaseHistory.length) {
                 }
             });
         }
+
         function excluirCompra(i) {
             const ov = openModal('Confirmar', '<p style="color:#ccc;text-align:center;">Excluir esta compra?</p>', [{cls:'btn-cancelar-modal',act:'c',lbl:'Cancelar'},{cls:'btn-excluir-modal',act:'e',lbl:'Excluir'}]);
             modalResult(ov, a => { if (a==='e') { purchaseLines.splice(i,1); closeModal(); renderCompras(); toast('Removido.','info'); } else closeModal(); });
         }
+
         async function salvarCompras() {
             syncCompras(); const er = [];
             purchaseLines.forEach((l,i) => {
@@ -637,6 +736,8 @@ if (purchaseHistory.length) {
             if (er.length) { toast(er.join(' '), 'error'); return; }
             purchaseLines = []; await saveAll(); renderCompras(); toast('Compra salva!', 'success');
         }
+
+        // ------------------- HISTÓRICO -------------------
         function renderHistorico() {
             const nm = document.getElementById('filtro-historico').value.trim();
             document.getElementById('historico-datalist').innerHTML = products.map(p => `<option value="${esc(p.descricao)}">`).join('');
@@ -652,6 +753,8 @@ if (purchaseHistory.length) {
         }
         document.getElementById('filtro-historico').addEventListener('input', renderHistorico);
         document.getElementById('btn-limpar-filtro').addEventListener('click', () => { document.getElementById('filtro-historico').value = ''; renderHistorico(); });
+
+        // ------------------- PRODUTOS -------------------
         function renderProdutos() {
             if (products.length) {
                 document.getElementById('produtos-table-wrapper').style.display = 'block';
@@ -674,6 +777,7 @@ if (purchaseHistory.length) {
                 document.getElementById('produtos-vazio').style.display = products.length ? 'none' : 'block';
             }
         }
+
         function syncPending() {
             document.querySelectorAll('#produtos-container .form-row').forEach(r => {
                 const t = parseInt(r.dataset.temp);
@@ -685,6 +789,7 @@ if (purchaseHistory.length) {
                 l.active = r.querySelector('[data-action="pend-active"]').checked;
             });
         }
+
         function editarProduto(id) {
             const p = products.find(pp => pp.id === id);
             if (!p) return;
@@ -706,20 +811,21 @@ if (purchaseHistory.length) {
                 } else closeModal();
             });
         }
+
+        // ------------------- EVENTOS PRINCIPAIS -------------------
         document.getElementById('main-content').addEventListener('click', e => {
             const btn = e.target.closest('button');
             if (!btn) return;
             const a = btn.dataset.action;
             if (a === 'estoque-menos') altEstoque(+btn.dataset.id, -1);
+            else if (a === 'estoque-mais') altEstoque(+btn.dataset.id, 1);
             else if (a === 'carrinho-menos') altCarrinho(+btn.dataset.index, -1);
             else if (a === 'carrinho-mais') altCarrinho(+btn.dataset.index, 1);
             else if (a === 'sugerir-carrinho') sugerir();
             else if (a === 'comprar-carrinho') comprarCarrinho();
             else if (a === 'enviar-carrinho') enviarCarrinho();
-            else if (a === 'compra-menos' || a === 'compra-mais') {
-                const i = +btn.dataset.index;
-                if (purchaseLines[i]) { purchaseLines[i].quantidade += a==='compra-menos'?-1:1; if (purchaseLines[i].quantidade<0) purchaseLines[i].quantidade=0; renderCompras(); }
-            }
+            else if (a === 'compra-menos') { const i = +btn.dataset.index; if (purchaseLines[i]) { purchaseLines[i].quantidade--; if (purchaseLines[i].quantidade<0) purchaseLines[i].quantidade=0; renderCompras(); } }
+            else if (a === 'compra-mais') { const i = +btn.dataset.index; if (purchaseLines[i]) { purchaseLines[i].quantidade++; renderCompras(); } }
             else if (a === 'compras-adicionar') { purchaseLines.push({descricao:'',quantidade:0,valor:0}); renderCompras(); }
             else if (a === 'compras-salvar') salvarCompras();
             else if (a === 'compras-excluir') excluirCompra(+btn.dataset.index);
@@ -738,6 +844,41 @@ if (purchaseHistory.length) {
             }
             else if (a === 'editar-produto') editarProduto(+btn.dataset.id);
         });
+
+        // Eventos de input/change para os campos de quantidade
+        document.getElementById('main-content').addEventListener('change', function(e) {
+            const target = e.target;
+            if (target.dataset.action === 'estoque-input') {
+                const id = +target.dataset.id;
+                const val = target.value;
+                setEstoque(id, val);
+            }
+            if (target.dataset.action === 'carrinho-input') {
+                const i = +target.dataset.index;
+                const val = +target.value;
+                if (!isNaN(val) && val >= 0 && cartItems[i]) {
+                    cartItems[i].comprar = val;
+                    renderCarrinho();
+                } else {
+                    // Reverte para o valor anterior
+                    renderCarrinho();
+                }
+            }
+            if (target.dataset.action === 'compra-input') {
+                const i = +target.dataset.index;
+                const val = +target.value;
+                if (!isNaN(val) && val >= 0 && purchaseLines[i]) {
+                    purchaseLines[i].quantidade = val;
+                    renderCompras();
+                } else {
+                    renderCompras();
+                }
+            }
+        });
+
+        // Também escuta 'input' para atualizar em tempo real (opcional, mas pode ser mais responsivo)
+        // Mas como 'change' já é suficiente, usamos apenas 'change' para não sobrecarregar.
+
         document.getElementById('main-content').addEventListener('input', e => {
             const t = e.target, a = t.dataset.action;
             if (a === 'compra-desc') { const i = +t.dataset.index; if (purchaseLines[i]) purchaseLines[i].descricao = t.value; }
@@ -746,13 +887,16 @@ if (purchaseHistory.length) {
             if (a === 'pend-min') { const tmp = +t.dataset.temp; const l = pending.find(ll=>ll.tempId===tmp); if(l) l.minimo = t.value; }
             if (a === 'pend-ideal') { const tmp = +t.dataset.temp; const l = pending.find(ll=>ll.tempId===tmp); if(l) l.ideal = t.value; }
         });
+
         document.getElementById('main-content').addEventListener('change', async e => {
             if (e.target.dataset.action === 'toggle-active') {
                 const p = products.find(pp => pp.id === +e.target.dataset.id);
                 if (p) { p.active = e.target.checked; await saveAll(); }
             }
         });
+
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
         if (isAuth()) { showApp(); } else { showLogin(); }
     </script>
 </body>
