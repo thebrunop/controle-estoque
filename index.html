@@ -153,7 +153,6 @@
         .estoque-cell {
             display: flex; align-items: center; justify-content: center; gap: 4px;
         }
-        /* Input com aparência de badge */
         .estoque-input {
             width: 52px;
             padding: 4px 0;
@@ -577,11 +576,11 @@ if (purchaseHistory.length) {
                 let bgCor, textoCor;
                 if (q === 0) {
                     bgCor = '#1a1a1a'; textoCor = '#ccc';
-                } else if (q > 0 && q <= mn) {
+                } else if (q > 0 && q < mn) {
                     bgCor = '#F50202'; textoCor = '#000';
-                } else if (q > mn && q <= id) {
+                } else if (q >= mn && q < id) {
                     bgCor = '#FFDD59'; textoCor = '#000';
-                } else if (q > id) {
+                } else if (q >= id) {
                     bgCor = '#6AB863'; textoCor = '#000';
                 }
                 tQ += q; tV += q*v;
@@ -652,7 +651,7 @@ if (purchaseHistory.length) {
         }
 
         function sugerir() {
-            const ativos = active();
+            const ativos = active().sort((a, b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
             if (!ativos.length) { toast('Nenhum produto ativo.', 'info'); return; }
             cartItems = [];
             ativos.forEach(p => {
@@ -697,7 +696,7 @@ if (purchaseHistory.length) {
         function renderCompras() {
             if (!purchaseLines.length) { document.getElementById('compras-tbody').innerHTML = ''; document.getElementById('compras-vazio').style.display = 'block'; return; }
             document.getElementById('compras-vazio').style.display = 'none';
-            const opts = active().map(p => `<option value="${esc(p.descricao)}">`).join('');
+            const opts = active().sort((a,b) => a.descricao.localeCompare(b.descricao, 'pt-BR')).map(p => `<option value="${esc(p.descricao)}">`).join('');
             document.getElementById('compras-tbody').innerHTML = purchaseLines.map((l,i) => `
                 <tr>
                     <td><input type="text" list="cdl${i}" value="${esc(l.descricao)}" data-action="compra-desc" data-index="${i}"><datalist id="cdl${i}">${opts}</datalist></td>
@@ -752,7 +751,9 @@ if (purchaseHistory.length) {
         // ------------------- HISTÓRICO -------------------
         function renderHistorico() {
             const nm = document.getElementById('filtro-historico').value.trim();
-            document.getElementById('historico-datalist').innerHTML = products.map(p => `<option value="${esc(p.descricao)}">`).join('');
+            // Ordena produtos para o datalist
+            const sorted = products.slice().sort((a,b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
+            document.getElementById('historico-datalist').innerHTML = sorted.map(p => `<option value="${esc(p.descricao)}">`).join('');
             if (!nm) { document.getElementById('historico-tbody').innerHTML = ''; document.getElementById('historico-vazio').style.display='block'; document.getElementById('valor-medio-historico').textContent = 'R$ 0,00'; return; }
             const p = products.find(pp => pp.descricao.trim().toLowerCase() === nm.toLowerCase());
             if (!p) { document.getElementById('historico-tbody').innerHTML = ''; document.getElementById('historico-vazio').style.display='block'; document.getElementById('valor-medio-historico').textContent = 'R$ 0,00'; return; }
@@ -768,9 +769,10 @@ if (purchaseHistory.length) {
 
         // ------------------- PRODUTOS -------------------
         function renderProdutos() {
-            if (products.length) {
+            const sorted = products.slice().sort((a,b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
+            if (sorted.length) {
                 document.getElementById('produtos-table-wrapper').style.display = 'block';
-                document.getElementById('produtos-cadastrados-tbody').innerHTML = products.map(p => `
+                document.getElementById('produtos-cadastrados-tbody').innerHTML = sorted.map(p => `
                     <tr><td>${esc(p.descricao)}</td><td>${p.minimo}</td><td>${p.ideal}</td>
                     <td><label class="switch"><input type="checkbox" data-action="toggle-active" data-id="${p.id}" ${p.active!==false?'checked':''}><span class="slider"></span></label></td>
                     <td><button class="btn-editar" data-action="editar-produto" data-id="${p.id}">✏️</button></td></tr>`).join('');
@@ -786,7 +788,7 @@ if (purchaseHistory.length) {
                     </div>`).join('');
             } else {
                 document.getElementById('produtos-container').innerHTML = '';
-                document.getElementById('produtos-vazio').style.display = products.length ? 'none' : 'block';
+                document.getElementById('produtos-vazio').style.display = sorted.length ? 'none' : 'block';
             }
         }
 
