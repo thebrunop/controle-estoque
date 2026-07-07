@@ -123,11 +123,6 @@
         tbody td { padding: 8px 4px; text-align: center; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tbody tr:hover { background: rgba(255,255,255,0.025); }
         tbody tr:last-child td { border-bottom: none; }
-        /* Cores de fundo (as mesmas usadas antes) */
-        .bg-preta { background: #1a1a1a; color: #ccc; }
-        .bg-vermelha { background: var(--vermelho-bg); color: #000; }
-        .bg-amarela { background: var(--amarelo-bg); color: #000; }
-        .bg-verde { background: var(--verde-bg); color: #000; }
 
         .btn-menos, .btn-mais {
             width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
@@ -158,41 +153,48 @@
         .estoque-cell {
             display: flex; align-items: center; justify-content: center; gap: 4px;
         }
-        /* Input editável que herda a cor de fundo da classe bg-* */
+        /* Input com aparência de badge */
         .estoque-input {
-            width: 56px;
-            padding: 6px 0;
+            width: 52px;
+            padding: 4px 0;
             text-align: center;
             font-weight: 700;
             font-size: 0.95rem;
             border: 2px solid transparent;
-            border-radius: var(--radius-sm);
-            /* Não define background aqui – a classe bg-* vai definir */
-            color: inherit; /* herda da classe */
+            border-radius: 6px;
+            background: transparent !important;
+            color: inherit;
             transition: border-color var(--transition), box-shadow var(--transition);
             font-family: var(--font);
             -moz-appearance: textfield;
             appearance: textfield;
+            outline: none;
         }
         .estoque-input::-webkit-outer-spin-button,
         .estoque-input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-        /* Quando em foco, mantém o fundo da classe mas adiciona um destaque */
         .estoque-input:focus {
             border-color: var(--azul);
             box-shadow: 0 0 0 2px rgba(114,175,255,0.4);
-            outline: none;
+            background-color: rgba(255,255,255,0.1) !important;
         }
 
         input[type="text"], input[type="number"], input[type="password"] {
-            background: var(--bg-input); border: 1px solid var(--border); color: #fff;
-            padding: 8px 10px; border-radius: var(--radius-sm); font-family: var(--font);
-            font-size: 0.85rem; max-width: 160px; transition: border-color var(--transition);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font);
+            font-size: 0.85rem;
+            max-width: 160px;
+            transition: border-color var(--transition);
         }
         input:focus { border-color: var(--azul); outline: none; box-shadow: 0 0 0 2px rgba(114,175,255,0.2); }
         input::placeholder { color: #666; font-style: italic; }
+
         .form-row {
             display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
             padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border);
@@ -273,7 +275,7 @@
             main { margin-top: 72px; padding: 6px 4px; }
             table { min-width: 480px; font-size: 0.7rem; }
             .modal-dialog { min-width: 260px; padding: 14px; }
-            .estoque-input { width: 48px; font-size: 0.85rem; padding: 4px 0; }
+            .estoque-input { width: 44px; font-size: 0.85rem; padding: 2px 0; }
             .btn-menos, .btn-mais, .btn-excluir { width: 28px; height: 28px; font-size: 0.9rem; }
             .totalizadores { font-size: 0.75rem; padding: 10px 14px; gap: 12px; }
             .carrinho-total { font-size: 0.75rem; padding: 4px 10px; }
@@ -572,18 +574,25 @@ if (purchaseHistory.length) {
             ativos.forEach(p => {
                 const s = stock[p.id] || { quantidade:0, valor:0 };
                 const q = s.quantidade, v = s.valor||0, mn = p.minimo||0, id = p.ideal||0;
-                let bg = 'bg-preta';
-                if (q>0 && q<=mn) bg='bg-vermelha';
-                else if (q>mn && q<=id) bg='bg-amarela';
-                else if (q>id) bg='bg-verde';
+                let bgCor, textoCor;
+                if (q === 0) {
+                    bgCor = '#1a1a1a'; textoCor = '#ccc';
+                } else if (q > 0 && q <= mn) {
+                    bgCor = '#F50202'; textoCor = '#000';
+                } else if (q > mn && q <= id) {
+                    bgCor = '#FFDD59'; textoCor = '#000';
+                } else if (q > id) {
+                    bgCor = '#6AB863'; textoCor = '#000';
+                }
                 tQ += q; tV += q*v;
                 html += `<tr><td>${esc(p.descricao)}</td><td>${mn}</td><td>${id}</td>
                     <td><div class="estoque-cell">
                         <button class="btn-menos" data-action="estoque-menos" data-id="${p.id}">−</button>
-                        <input type="number" class="estoque-input ${bg}" value="${q}" 
+                        <input type="number" class="estoque-input" value="${q}" 
                                data-action="estoque-input" data-id="${p.id}" 
-                               min="0" step="1" inputmode="numeric">
-                        <button class="btn-mais" data-action="estoque-mais" data-id="${p.id}">+</button>
+                               min="0" step="1" inputmode="numeric"
+                               style="background-color: ${bgCor} !important; color: ${textoCor} !important;">
+                        <!-- Botão "+" removido na aba Estoque -->
                     </div></td>
                     <td>${fmt(v)}</td><td>${fmt(q*v)}</td></tr>`;
             });
@@ -630,9 +639,10 @@ if (purchaseHistory.length) {
                     <td>${it.qtdIdeal}</td><td>${fmt(it.valorIdeal)}</td>
                     <td><div class="estoque-cell">
                         <button class="btn-menos" data-action="carrinho-menos" data-index="${i}">−</button>
-                        <input type="number" class="estoque-input bg-preta" value="${it.comprar}" 
+                        <input type="number" class="estoque-input" value="${it.comprar}" 
                                data-action="carrinho-input" data-index="${i}" 
-                               min="0" step="1" inputmode="numeric">
+                               min="0" step="1" inputmode="numeric"
+                               style="background-color: #1a1a1a !important; color: #ccc !important;">
                         <button class="btn-mais" data-action="carrinho-mais" data-index="${i}">+</button>
                     </div></td>
                     <td>${fmt(vf)}</td></tr>`;
@@ -693,9 +703,10 @@ if (purchaseHistory.length) {
                     <td><input type="text" list="cdl${i}" value="${esc(l.descricao)}" data-action="compra-desc" data-index="${i}"><datalist id="cdl${i}">${opts}</datalist></td>
                     <td><div class="estoque-cell">
                         <button class="btn-menos" data-action="compra-menos" data-index="${i}">−</button>
-                        <input type="number" class="estoque-input bg-preta" value="${l.quantidade}" 
+                        <input type="number" class="estoque-input" value="${l.quantidade}" 
                                data-action="compra-input" data-index="${i}" 
-                               min="0" step="1" inputmode="numeric">
+                               min="0" step="1" inputmode="numeric"
+                               style="background-color: #1a1a1a !important; color: #ccc !important;">
                         <button class="btn-mais" data-action="compra-mais" data-index="${i}">+</button>
                     </div></td>
                     <td><input type="number" step="0.01" value="${l.valor}" data-action="compra-valor" data-index="${i}" style="max-width:110px;" inputmode="decimal"></td>
