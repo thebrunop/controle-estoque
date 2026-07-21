@@ -411,503 +411,550 @@
     <div id="toast-container" aria-live="polite"></div>
     <div id="modal-container"></div>
     <script>
-        const SUPABASE_URL = 'https://rtzsmjchpkzktqnykwnq.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_0DePAaegQ6PEELq9N9M6wg_TdubVqho';
-        if (typeof window.supabase === 'undefined') {
-            document.body.innerHTML = '<h1 style="color:red;text-align:center;margin-top:100px;">Erro: SDK do Supabase não carregou.</h1>';
-            throw new Error('SDK não carregada');
-        }
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let products = [], stock = {}, purchaseHistory = [], cartItems = [], purchaseLines = [], pending = [], pendCount = 0;
-        const isAuth = () => sessionStorage.getItem('auth') === '1';
-        const auth = () => sessionStorage.setItem('auth', '1');
-        const deauth = () => sessionStorage.removeItem('auth');
-        async function checkCredentials(u, p) {
-            try {
-                const { data, error } = await supabaseClient.from('app_users').select('password').eq('username', u).single();
-                if (error) return false;
-                return data && data.password === p;
-            } catch { return false; }
-        }
-        function showApp() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('app-header').style.display = 'flex';
-            document.getElementById('main-content').style.display = 'block';
-            document.querySelector('footer').style.display = 'flex';
-            loadData().then(() => renderEstoque());
-        }
-        function showLogin() {
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('app-header').style.display = 'none';
-            document.getElementById('main-content').style.display = 'none';
-            document.querySelector('footer').style.display = 'none';
-        }
-        async function tryLogin() {
-            const u = document.getElementById('login-usuario').value.trim().toLowerCase();
-            const p = document.getElementById('login-senha').value.trim();
-            if (!u || !p) { document.getElementById('login-error').textContent = 'Preencha todos os campos.'; return; }
-            document.getElementById('login-error').textContent = 'Verificando...';
-            if (await checkCredentials(u, p)) { auth(); showApp(); }
-            else { document.getElementById('login-error').textContent = 'Usuário ou senha inválidos.'; }
-        }
-        document.getElementById('btn-login').addEventListener('click', tryLogin);
-        document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
-        document.getElementById('btn-logout').addEventListener('click', () => {
-            const ov = openModal('Sair', '<p style="color:#ccc;text-align:center;">Deseja realmente sair?</p>', [
-                {cls:'btn-cancelar-modal', act:'c', lbl:'Cancelar'}, {cls:'btn-excluir-modal', act:'e', lbl:'Sair'}
+    const SUPABASE_URL = 'https://rtzsmjchpkzktqnykwnq.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_0DePAaegQ6PEELq9N9M6wg_TdubVqho';
+    if (typeof window.supabase === 'undefined') {
+        document.body.innerHTML = '<h1 style="color:red;text-align:center;margin-top:100px;">Erro: SDK do Supabase não carregou.</h1>';
+        throw new Error('SDK não carregada');
+    }
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let products = [], stock = {}, purchaseHistory = [], cartItems = [], purchaseLines = [], pending = [], pendCount = 0;
+    const isAuth = () => sessionStorage.getItem('auth') === '1';
+    const auth = () => sessionStorage.setItem('auth', '1');
+    const deauth = () => sessionStorage.removeItem('auth');
+    async function checkCredentials(u, p) {
+        try {
+            const { data, error } = await supabaseClient.from('app_users').select('password').eq('username', u).single();
+            if (error) return false;
+            return data && data.password === p;
+        } catch { return false; }
+    }
+    function showApp() {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-header').style.display = 'flex';
+        document.getElementById('main-content').style.display = 'block';
+        document.querySelector('footer').style.display = 'flex';
+        loadData().then(() => renderEstoque());
+    }
+    function showLogin() {
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('app-header').style.display = 'none';
+        document.getElementById('main-content').style.display = 'none';
+        document.querySelector('footer').style.display = 'none';
+    }
+    async function tryLogin() {
+        const u = document.getElementById('login-usuario').value.trim().toLowerCase();
+        const p = document.getElementById('login-senha').value.trim();
+        if (!u || !p) { document.getElementById('login-error').textContent = 'Preencha todos os campos.'; return; }
+        document.getElementById('login-error').textContent = 'Verificando...';
+        if (await checkCredentials(u, p)) { auth(); showApp(); }
+        else { document.getElementById('login-error').textContent = 'Usuário ou senha inválidos.'; }
+    }
+    document.getElementById('btn-login').addEventListener('click', tryLogin);
+    document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+    document.getElementById('btn-logout').addEventListener('click', () => {
+        const ov = openModal('Sair', '<p style="color:#ccc;text-align:center;">Deseja realmente sair?</p>', [
+            {cls:'btn-cancelar-modal', act:'c', lbl:'Cancelar'}, {cls:'btn-excluir-modal', act:'e', lbl:'Sair'}
+        ]);
+        modalResult(ov, a => { if (a === 'e') { deauth(); closeModal(); showLogin(); } else closeModal(); });
+    });
+    document.getElementById('btn-change-password').addEventListener('click', () => {
+        const ov = openModal('Alterar Senha', `
+            <div class="form-row"><label>Senha atual:</label><input type="password" id="sa"></div>
+            <div class="form-row"><label>Nova senha:</label><input type="password" id="sn"></div>
+            <div class="form-row"><label>Confirmação:</label><input type="password" id="sc"></div>`,
+            [{cls:'btn-cancelar-modal',act:'c',lbl:'Cancelar'},{cls:'btn-salvar-modal',act:'s',lbl:'Salvar'}]);
+        modalResult(ov, async a => {
+            if (a === 's') {
+                const sa = document.getElementById('sa').value;
+                const sn = document.getElementById('sn').value;
+                const sc = document.getElementById('sc').value;
+                const { data } = await supabaseClient.from('app_users').select('password').eq('username','deise').single();
+                if (!data || data.password !== sa) { toast('Senha atual incorreta.','error'); return; }
+                if (!sn) { toast('Nova senha obrigatória.','error'); return; }
+                if (sn !== sc) { toast('Confirmação não coincide.','error'); return; }
+                await supabaseClient.from('app_users').update({ password: sn }).eq('username','deise');
+                closeModal(); toast('Senha alterada!','success');
+            } else closeModal();
+        });
+    });
+    async function loadData() {
+        try {
+            const [prodRes, stockRes, histRes] = await Promise.all([
+                supabaseClient.from('products').select('*'),
+                supabaseClient.from('stock').select('*'),
+                supabaseClient.from('purchase_history').select('*').order('date', { ascending: false })
             ]);
-            modalResult(ov, a => { if (a === 'e') { deauth(); closeModal(); showLogin(); } else closeModal(); });
+            products = prodRes.data || [];
+            stock = {};
+            (stockRes.data || []).forEach(s => stock[s.product_id] = { quantidade: s.quantidade, valor: s.valor });
+            products.forEach(p => { if (!stock[p.id]) stock[p.id] = { quantidade: 0, valor: 0 }; });
+            purchaseHistory = (histRes.data || []).map(h => ({
+                ...h,
+                productId: h.product_id
+            }));
+        } catch (err) { console.error(err); }
+    }
+
+    // ------------------- SALVAMENTO (upserts pontuais, sem apagar tabelas inteiras) -------------------
+    async function upsertProduct(p) {
+        const { error } = await supabaseClient.from('products').upsert({
+            id: p.id, descricao: p.descricao, minimo: p.minimo, ideal: p.ideal, active: p.active
         });
-        document.getElementById('btn-change-password').addEventListener('click', () => {
-            const ov = openModal('Alterar Senha', `
-                <div class="form-row"><label>Senha atual:</label><input type="password" id="sa"></div>
-                <div class="form-row"><label>Nova senha:</label><input type="password" id="sn"></div>
-                <div class="form-row"><label>Confirmação:</label><input type="password" id="sc"></div>`,
-                [{cls:'btn-cancelar-modal',act:'c',lbl:'Cancelar'},{cls:'btn-salvar-modal',act:'s',lbl:'Salvar'}]);
-            modalResult(ov, async a => {
-                if (a === 's') {
-                    const sa = document.getElementById('sa').value;
-                    const sn = document.getElementById('sn').value;
-                    const sc = document.getElementById('sc').value;
-                    const { data } = await supabaseClient.from('app_users').select('password').eq('username','deise').single();
-                    if (!data || data.password !== sa) { toast('Senha atual incorreta.','error'); return; }
-                    if (!sn) { toast('Nova senha obrigatória.','error'); return; }
-                    if (sn !== sc) { toast('Confirmação não coincide.','error'); return; }
-                    await supabaseClient.from('app_users').update({ password: sn }).eq('username','deise');
-                    closeModal(); toast('Senha alterada!','success');
-                } else closeModal();
+        if (error) { console.error(error); toast('Erro ao salvar produto: ' + error.message, 'error'); return false; }
+        return true;
+    }
+    async function upsertStock(id) {
+        const s = stock[id] || { quantidade: 0, valor: 0 };
+        const { error } = await supabaseClient.from('stock').upsert({
+            product_id: id, quantidade: s.quantidade, valor: s.valor
+        });
+        if (error) { console.error(error); toast('Erro ao salvar estoque: ' + error.message, 'error'); return false; }
+        return true;
+    }
+    async function insertHistory(records) {
+        if (!records.length) return true;
+        const { error } = await supabaseClient.from('purchase_history').insert(records);
+        if (error) { console.error(error); toast('Erro ao salvar histórico: ' + error.message, 'error'); return false; }
+        return true;
+    }
+
+    const toastContainer = document.getElementById('toast-container');
+    const modalContainer = document.getElementById('modal-container');
+    function toast(msg, type) {
+        const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
+        toastContainer.appendChild(t); setTimeout(() => t.remove(), 3000);
+    }
+    function openModal(title, html, btns) {
+        const ov = document.createElement('div'); ov.className = 'modal-overlay';
+        ov.innerHTML = `<div class="modal-dialog"><h3>${title}</h3><div>${html}</div><div class="modal-buttons">${btns.map(b => `<button class="${b.cls}" data-modal-action="${b.act}">${b.lbl}</button>`).join('')}</div></div>`;
+        modalContainer.appendChild(ov);
+        ov.addEventListener('click', e => { if (e.target === ov) closeModal(); });
+        return ov;
+    }
+    function closeModal() { modalContainer.innerHTML = ''; }
+    function modalResult(ov, cb) {
+        ov.querySelectorAll('[data-modal-action]').forEach(b => b.addEventListener('click', function() { cb(this.dataset.modalAction); }));
+    }
+    function fmt(v) { return 'R$ ' + (Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+    function nextId() { return products.length ? Math.max(...products.map(p => p.id)) + 1 : 1; }
+    function active() { return products.filter(p => p.active !== false); }
+    function switchTab(tab) {
+        if (document.querySelector('.tab-content.active')?.id === 'tab-carrinho') cartItems = [];
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => { b.classList.remove('active'); b.removeAttribute('aria-current'); });
+        const content = document.getElementById('tab-'+tab);
+        const btn = document.querySelector(`nav button[data-tab="${tab}"]`);
+        if (content) content.classList.add('active');
+        if (btn) { btn.classList.add('active'); btn.setAttribute('aria-current', 'page'); }
+        if (tab === 'estoque') renderEstoque();
+        else if (tab === 'carrinho') renderCarrinho();
+        else if (tab === 'compras') renderCompras();
+        else if (tab === 'historico') renderHistorico();
+        else if (tab === 'produtos') renderProdutos();
+    }
+    document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+    // ------------------- ESTOQUE -------------------
+    function renderEstoque() {
+        const ativos = active().sort((a, b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
+        if (!ativos.length) {
+            document.getElementById('estoque-tbody').innerHTML = '';
+            document.getElementById('estoque-vazio').style.display = 'block';
+            document.getElementById('estoque-totalizadores').style.display = 'none';
+            return;
+        }
+        document.getElementById('estoque-vazio').style.display = 'none';
+        document.getElementById('estoque-totalizadores').style.display = 'flex';
+        let tQ=0, tV=0, html='';
+        ativos.forEach(p => {
+            const s = stock[p.id] || { quantidade:0, valor:0 };
+            const q = s.quantidade, v = s.valor||0, mn = p.minimo||0, id = p.ideal||0;
+            let bgCor, textoCor;
+            if (q === 0) {
+                bgCor = '#1a1a1a'; textoCor = '#ccc';
+            } else if (q > 0 && q < mn) {
+                bgCor = '#F50202'; textoCor = '#000';
+            } else if (q >= mn && q < id) {
+                bgCor = '#FFDD59'; textoCor = '#000';
+            } else if (q >= id) {
+                bgCor = '#6AB863'; textoCor = '#000';
+            }
+            tQ += q; tV += q*v;
+            html += `<tr><td>${esc(p.descricao)}</td><td>${mn}</td><td>${id}</td>
+                <td><div class="estoque-cell">
+                    <button class="btn-menos" data-action="estoque-menos" data-id="${p.id}">−</button>
+                    <input type="number" class="estoque-input" value="${q}" 
+                           data-action="estoque-input" data-id="${p.id}" 
+                           min="0" step="1" inputmode="numeric"
+                           style="background-color: ${bgCor} !important; color: ${textoCor} !important;">
+                </div></td>
+                <td>${fmt(v)}</td><td>${fmt(q*v)}</td></tr>`;
+        });
+        document.getElementById('estoque-tbody').innerHTML = html;
+        document.getElementById('estoque-total-qtd').textContent = tQ;
+        document.getElementById('estoque-total-valor').textContent = fmt(tV);
+    }
+
+    async function setEstoque(id, novoValor) {
+        const q = Number(novoValor);
+        if (isNaN(q) || q < 0) {
+            toast('Valor inválido.', 'error');
+            renderEstoque();
+            return;
+        }
+        if (!stock[id]) stock[id] = { quantidade: 0, valor: 0 };
+        stock[id].quantidade = q;
+        await upsertStock(id);
+        renderEstoque();
+    }
+
+    async function altEstoque(id, d) {
+        if (!stock[id]) stock[id] = { quantidade:0, valor:0 };
+        const n = stock[id].quantidade + d;
+        if (n < 0) { toast('Estoque não pode ser negativo.', 'info'); return; }
+        stock[id].quantidade = n;
+        await upsertStock(id);
+        renderEstoque();
+    }
+
+    // ------------------- CARRINHO -------------------
+    function renderCarrinho() {
+        if (!cartItems.length) {
+            document.getElementById('carrinho-tbody').innerHTML = '';
+            document.getElementById('carrinho-vazio').style.display = 'block';
+            document.getElementById('carrinho-totalizador').textContent = 'Total: R$ 0,00';
+            return;
+        }
+        document.getElementById('carrinho-vazio').style.display = 'none';
+        let html='', tot=0;
+        cartItems.forEach((it,i) => {
+            const vf = it.comprar * it.valorUnitario; tot += vf;
+            html += `<tr><td>${esc(it.descricao)}</td><td>${it.qtdMinimo}</td><td>${fmt(it.valorMinimo)}</td>
+                <td>${it.qtdIdeal}</td><td>${fmt(it.valorIdeal)}</td>
+                <td><div class="estoque-cell">
+                    <button class="btn-menos" data-action="carrinho-menos" data-index="${i}">−</button>
+                    <input type="number" class="estoque-input" value="${it.comprar}" 
+                           data-action="carrinho-input" data-index="${i}" 
+                           min="0" step="1" inputmode="numeric"
+                           style="background-color: #1a1a1a !important; color: #ccc !important;">
+                    <button class="btn-mais" data-action="carrinho-mais" data-index="${i}">+</button>
+                </div></td>
+                <td>${fmt(vf)}</td></tr>`;
+        });
+        document.getElementById('carrinho-tbody').innerHTML = html;
+        document.getElementById('carrinho-totalizador').textContent = `Total: ${fmt(tot)}`;
+    }
+
+    function sugerir() {
+        const ativos = active().sort((a, b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
+        if (!ativos.length) { toast('Nenhum produto ativo.', 'info'); return; }
+        cartItems = [];
+        ativos.forEach(p => {
+            const s = stock[p.id] || { quantidade:0, valor:0 };
+            if (s.quantidade >= p.ideal) return;
+            const mnD = Math.max(0, p.minimo - s.quantidade);
+            const idD = Math.max(0, p.ideal - s.quantidade);
+            cartItems.push({ productId:p.id, descricao:p.descricao, qtdMinimo:mnD, valorMinimo:mnD*(s.valor||0), qtdIdeal:idD, valorIdeal:idD*(s.valor||0), comprar:0, valorUnitario:s.valor||0 });
+        });
+        if (!cartItems.length) toast('Todos acima do Ideal.', 'info');
+        else toast(`Carrinho gerado com ${cartItems.length} itens.`, 'success');
+        renderCarrinho();
+    }
+
+    function altCarrinho(i, d) {
+        if (cartItems[i]) {
+            const n = cartItems[i].comprar + d;
+            if (n >= 0) {
+                cartItems[i].comprar = n;
+                renderCarrinho();
+            }
+        }
+    }
+
+    function comprarCarrinho() {
+        const it = cartItems.filter(i => i.comprar>0);
+        if (!it.length) { toast('Ajuste a coluna Comprar.', 'info'); return; }
+        purchaseLines = it.map(i => ({ descricao: i.descricao, quantidade: i.comprar, valor: 0 }));
+        toast('Transferido para Compras.', 'success'); switchTab('compras');
+    }
+
+    function enviarCarrinho() {
+        const it = cartItems.filter(i => i.comprar>0);
+        if (!it.length) { toast('Ajuste a coluna Comprar.', 'info'); return; }
+        let msg = '🛒 *Pedido de Compras*\n\n'; let t=0;
+        it.forEach(i => { const v = i.comprar*i.valorUnitario; t+=v; msg += `• ${i.descricao}: ${i.comprar} un (${fmt(v)})\n`; });
+        msg += `\n💰 Total: ${fmt(t)}`;
+        if (confirm('Enviar WhatsApp?\n\n'+it.map(i=>`• ${i.descricao}: ${i.comprar} un`).join('\n'))) window.open(`https://wa.me/5531993066079?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    // ------------------- COMPRAS -------------------
+    function renderCompras() {
+        if (!purchaseLines.length) { document.getElementById('compras-tbody').innerHTML = ''; document.getElementById('compras-vazio').style.display = 'block'; return; }
+        document.getElementById('compras-vazio').style.display = 'none';
+        const opts = active().sort((a,b) => a.descricao.localeCompare(b.descricao, 'pt-BR')).map(p => `<option value="${esc(p.descricao)}">`).join('');
+        document.getElementById('compras-tbody').innerHTML = purchaseLines.map((l,i) => `
+            <tr>
+                <td><input type="text" list="cdl${i}" value="${esc(l.descricao)}" data-action="compra-desc" data-index="${i}"><datalist id="cdl${i}">${opts}</datalist></td>
+                <td><div class="estoque-cell">
+                    <button class="btn-menos" data-action="compra-menos" data-index="${i}">−</button>
+                    <input type="number" class="estoque-input" value="${l.quantidade}" 
+                           data-action="compra-input" data-index="${i}" 
+                           min="0" step="1" inputmode="numeric"
+                           style="background-color: #1a1a1a !important; color: #ccc !important;">
+                    <button class="btn-mais" data-action="compra-mais" data-index="${i}">+</button>
+                </div></td>
+                <td><input type="number" step="0.01" value="${l.valor}" data-action="compra-valor" data-index="${i}" style="max-width:110px;" inputmode="decimal"></td>
+                <td><button class="btn-excluir" data-action="compras-excluir" data-index="${i}">✕</button></td>
+            </tr>`).join('');
+    }
+
+    function syncCompras() {
+        document.querySelectorAll('#compras-tbody tr').forEach(r => {
+            const i = parseInt(r.querySelector('[data-action="compra-desc"]')?.dataset.index);
+            if (!isNaN(i) && purchaseLines[i]) {
+                purchaseLines[i].descricao = r.querySelector('[data-action="compra-desc"]').value;
+                purchaseLines[i].valor = parseFloat(r.querySelector('[data-action="compra-valor"]').value)||0;
+            }
+        });
+    }
+
+    function excluirCompra(i) {
+        const ov = openModal('Confirmar', '<p style="color:#ccc;text-align:center;">Excluir esta compra?</p>', [{cls:'btn-cancelar-modal',act:'c',lbl:'Cancelar'},{cls:'btn-excluir-modal',act:'e',lbl:'Excluir'}]);
+        modalResult(ov, a => { if (a==='e') { purchaseLines.splice(i,1); closeModal(); renderCompras(); toast('Removido.','info'); } else closeModal(); });
+    }
+
+    async function salvarCompras() {
+        syncCompras(); const er = [];
+        purchaseLines.forEach((l,i) => {
+            if (!l.descricao.trim()) er.push(`Linha ${i+1}: selecione produto.`);
+            if (l.quantidade <= 0) er.push(`Linha ${i+1}: quantidade inválida.`);
+            if (l.valor <= 0) er.push(`Linha ${i+1}: valor inválido.`);
+        });
+        if (er.length) { toast(er.join(' '), 'error'); return; }
+
+        const now = new Date().toISOString();
+        const historyToInsert = [];
+        const idsAlterados = new Set();
+
+        for (const l of purchaseLines) {
+            const p = products.find(pp => pp.descricao.trim().toLowerCase() === l.descricao.trim().toLowerCase() && pp.active !== false);
+            if (!p) { er.push(`Produto "${l.descricao}" não encontrado.`); continue; }
+            if (!stock[p.id]) stock[p.id] = { quantidade:0, valor:0 };
+            stock[p.id].quantidade += l.quantidade;
+            stock[p.id].valor = l.valor;
+            idsAlterados.add(p.id);
+            historyToInsert.push({ product_id:p.id, date:now, quantity:l.quantidade, value:l.valor });
+        }
+        if (er.length) { toast(er.join(' '), 'error'); return; }
+
+        // Atualiza só o estoque dos produtos afetados (upsert, não apaga a tabela)
+        for (const id of idsAlterados) await upsertStock(id);
+        // Insere só as novas linhas de histórico (nunca apaga o que já existe)
+        await insertHistory(historyToInsert);
+
+        purchaseLines = [];
+        await loadData();
+        renderCompras();
+        if (document.getElementById('tab-historico').classList.contains('active')) {
+            renderHistorico();
+        }
+        toast('Compra salva!', 'success');
+    }
+
+    // ------------------- HISTÓRICO -------------------
+    async function recarregarHistorico() {
+        await loadData();
+        renderHistorico();
+        toast('Histórico recarregado.', 'info');
+    }
+
+    function renderHistorico() {
+        const nm = document.getElementById('filtro-historico').value.trim();
+        const sorted = products.slice().sort((a,b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
+        document.getElementById('historico-datalist').innerHTML = sorted.map(p => `<option value="${esc(p.descricao)}">`).join('');
+        if (!nm) { document.getElementById('historico-tbody').innerHTML = ''; document.getElementById('historico-vazio').style.display='block'; document.getElementById('valor-medio-historico').textContent = 'R$ 0,00'; return; }
+        const p = products.find(pp => pp.descricao.trim().toLowerCase() === nm.toLowerCase());
+        if (!p) { document.getElementById('historico-tbody').innerHTML = ''; document.getElementById('historico-vazio').style.display='block'; document.getElementById('valor-medio-historico').textContent = 'R$ 0,00'; return; }
+        const regs = purchaseHistory.filter(h => h.productId === p.id);
+        if (!regs.length) { document.getElementById('historico-tbody').innerHTML = ''; document.getElementById('historico-vazio').style.display='block'; document.getElementById('valor-medio-historico').textContent = 'R$ 0,00'; return; }
+        document.getElementById('historico-vazio').style.display = 'none';
+        let sv = 0;
+        document.getElementById('historico-tbody').innerHTML = regs.map(r => { sv += r.value; const d = new Date(r.date); return `<tr><td>${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td><td>${r.quantity}</td><td>${fmt(r.value)}</td></tr>`; }).join('');
+        document.getElementById('valor-medio-historico').textContent = fmt(sv / regs.length);
+    }
+
+    document.getElementById('filtro-historico').addEventListener('input', renderHistorico);
+    document.getElementById('btn-limpar-filtro').addEventListener('click', () => { document.getElementById('filtro-historico').value = ''; renderHistorico(); });
+
+    // ------------------- PRODUTOS -------------------
+    function renderProdutos() {
+        const sorted = products.slice().sort((a,b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
+        if (sorted.length) {
+            document.getElementById('produtos-table-wrapper').style.display = 'block';
+            document.getElementById('produtos-cadastrados-tbody').innerHTML = sorted.map(p => `
+                <tr><td>${esc(p.descricao)}</td><td>${p.minimo}</td><td>${p.ideal}</td>
+                <td><label class="switch"><input type="checkbox" data-action="toggle-active" data-id="${p.id}" ${p.active!==false?'checked':''}><span class="slider"></span></label></td>
+                <td><button class="btn-editar" data-action="editar-produto" data-id="${p.id}">✏️</button></td></tr>`).join('');
+        } else document.getElementById('produtos-table-wrapper').style.display = 'none';
+        if (pending.length) {
+            document.getElementById('produtos-vazio').style.display = 'none';
+            document.getElementById('produtos-container').innerHTML = pending.map(l => `
+                <div class="form-row" data-temp="${l.tempId}">
+                    <div class="field-group"><label>Desc:</label><input type="text" value="${esc(l.descricao)}" data-action="pend-desc" data-temp="${l.tempId}" placeholder="Arroz..."></div>
+                    <div class="field-group"><label>Mín:</label><input type="number" value="${l.minimo??''}" data-action="pend-min" data-temp="${l.tempId}" placeholder="0"></div>
+                    <div class="field-group"><label>Ideal:</label><input type="number" value="${l.ideal??''}" data-action="pend-ideal" data-temp="${l.tempId}" placeholder="0"></div>
+                    <label class="switch"><input type="checkbox" data-action="pend-active" data-temp="${l.tempId}" ${l.active!==false?'checked':''}><span class="slider"></span> Ativo</label>
+                </div>`).join('');
+        } else {
+            document.getElementById('produtos-container').innerHTML = '';
+            document.getElementById('produtos-vazio').style.display = sorted.length ? 'none' : 'block';
+        }
+    }
+
+    function syncPending() {
+        document.querySelectorAll('#produtos-container .form-row').forEach(r => {
+            const t = parseInt(r.dataset.temp);
+            const l = pending.find(ll => ll.tempId === t);
+            if (!l) return;
+            l.descricao = r.querySelector('[data-action="pend-desc"]').value;
+            l.minimo = r.querySelector('[data-action="pend-min"]').value;
+            l.ideal = r.querySelector('[data-action="pend-ideal"]').value;
+            l.active = r.querySelector('[data-action="pend-active"]').checked;
+        });
+    }
+
+    function editarProduto(id) {
+        const p = products.find(pp => pp.id === id);
+        if (!p) return;
+        const ov = openModal('Editar', `
+            <div class="form-row"><label>Descrição:</label><input type="text" id="ed" value="${esc(p.descricao)}"></div>
+            <div class="form-row"><label>Mínimo:</label><input type="number" id="em" value="${p.minimo}"></div>
+            <div class="form-row"><label>Ideal:</label><input type="number" id="ei" value="${p.ideal}"></div>`,
+            [{cls:'btn-cancelar-modal',act:'c',lbl:'Cancelar'},{cls:'btn-salvar-modal',act:'s',lbl:'Salvar'}]);
+        modalResult(ov, async a => {
+            if (a === 's') {
+                const d = document.getElementById('ed').value.trim();
+                const m = parseInt(document.getElementById('em').value);
+                const i = parseInt(document.getElementById('ei').value);
+                if (!d) { toast('Descrição obrigatória.', 'error'); return; }
+                if (isNaN(m)||isNaN(i)) { toast('Mínimo e Ideal obrigatórios.', 'error'); return; }
+                if (m > i) { toast('Mínimo > Ideal.', 'error'); return; }
+                const backup = { ...p };
+                p.descricao = d; p.minimo = m; p.ideal = i;
+                const ok = await upsertProduct(p);
+                if (ok) { closeModal(); renderProdutos(); toast('Atualizado!', 'success'); }
+                else { Object.assign(p, backup); }
+            } else closeModal();
+        });
+    }
+
+    // ------------------- EVENTOS PRINCIPAIS -------------------
+    document.getElementById('main-content').addEventListener('click', e => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const a = btn.dataset.action;
+        if (a === 'estoque-menos') altEstoque(+btn.dataset.id, -1);
+        else if (a === 'estoque-mais') altEstoque(+btn.dataset.id, 1);
+        else if (a === 'carrinho-menos') altCarrinho(+btn.dataset.index, -1);
+        else if (a === 'carrinho-mais') altCarrinho(+btn.dataset.index, 1);
+        else if (a === 'sugerir-carrinho') sugerir();
+        else if (a === 'comprar-carrinho') comprarCarrinho();
+        else if (a === 'enviar-carrinho') enviarCarrinho();
+        else if (a === 'compra-menos') { const i = +btn.dataset.index; if (purchaseLines[i]) { purchaseLines[i].quantidade--; if (purchaseLines[i].quantidade<0) purchaseLines[i].quantidade=0; renderCompras(); } }
+        else if (a === 'compra-mais') { const i = +btn.dataset.index; if (purchaseLines[i]) { purchaseLines[i].quantidade++; renderCompras(); } }
+        else if (a === 'compras-adicionar') { purchaseLines.push({descricao:'',quantidade:0,valor:0}); renderCompras(); }
+        else if (a === 'compras-salvar') salvarCompras();
+        else if (a === 'compras-excluir') excluirCompra(+btn.dataset.index);
+        else if (a === 'incluir-produto') { pendCount++; pending.push({tempId:pendCount,descricao:'',minimo:null,ideal:null,active:true}); renderProdutos(); }
+        else if (a === 'salvar-produtos') {
+            syncPending(); const er = [];
+            pending.forEach((l,i) => {
+                if (!l.descricao.trim()) er.push(`Linha ${i+1}: descrição.`);
+                if (l.minimo===''||l.minimo===null) er.push(`Linha ${i+1}: mínimo.`);
+                if (l.ideal===''||l.ideal===null) er.push(`Linha ${i+1}: ideal.`);
+                if (Number(l.minimo) > Number(l.ideal)) er.push(`Linha ${i+1}: mín > ideal.`);
             });
-        });
-        async function loadData() {
-            try {
-                const [prodRes, stockRes, histRes] = await Promise.all([
-                    supabaseClient.from('products').select('*'),
-                    supabaseClient.from('stock').select('*'),
-                    supabaseClient.from('purchase_history').select('*').order('date', { ascending: false })
-                ]);
-                products = prodRes.data || [];
-                stock = {};
-                (stockRes.data || []).forEach(s => stock[s.product_id] = { quantidade: s.quantidade, valor: s.valor });
-                products.forEach(p => { if (!stock[p.id]) stock[p.id] = { quantidade: 0, valor: 0 }; });
-                purchaseHistory = (histRes.data || []).map(h => ({
-                    ...h,
-                    productId: h.product_id
+            if (er.length) { toast(er.join(' '), 'error'); return; }
+            (async () => {
+                let idCounter = nextId();
+                const novos = pending.map(l => ({
+                    id: idCounter++,
+                    descricao: l.descricao.trim(),
+                    minimo: Number(l.minimo),
+                    ideal: Number(l.ideal),
+                    active: l.active !== false
                 }));
-            } catch (err) { console.error(err); }
-        }
-        async function saveAll() {
-            try {
-                await supabaseClient.from('products').delete().neq('id', 0);
-                if (products.length) await supabaseClient.from('products').insert(products.map(p => ({ id:p.id, descricao:p.descricao, minimo:p.minimo, ideal:p.ideal, active:p.active })));
-                const sa = Object.entries(stock).map(([id, s]) => ({ product_id: +id, quantidade: s.quantidade, valor: s.valor }));
-                await supabaseClient.from('stock').delete().neq('product_id', 0);
-                if (sa.length) await supabaseClient.from('stock').insert(sa);
-                const { error: deleteError } =
-    await supabaseClient
-        .from('purchase_history')
-        .delete()
-        .neq('id', 0);
-
-console.log('DELETE purchase_history:', deleteError);
-
-if (purchaseHistory.length) {
-    const { data, error } =
-        await supabaseClient
-            .from('purchase_history')
-            .insert(purchaseHistory);
-
-    console.log('INSERT DATA:', data);
-    console.log('INSERT ERROR:', error);
-}
-            } catch (err) { console.error(err); }
-        }
-        const toastContainer = document.getElementById('toast-container');
-        const modalContainer = document.getElementById('modal-container');
-        function toast(msg, type) {
-            const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
-            toastContainer.appendChild(t); setTimeout(() => t.remove(), 3000);
-        }
-        function openModal(title, html, btns) {
-            const ov = document.createElement('div'); ov.className = 'modal-overlay';
-            ov.innerHTML = `<div class="modal-dialog"><h3>${title}</h3><div>${html}</div><div class="modal-buttons">${btns.map(b => `<button class="${b.cls}" data-modal-action="${b.act}">${b.lbl}</button>`).join('')}</div></div>`;
-            modalContainer.appendChild(ov);
-            ov.addEventListener('click', e => { if (e.target === ov) closeModal(); });
-            return ov;
-        }
-        function closeModal() { modalContainer.innerHTML = ''; }
-        function modalResult(ov, cb) {
-            ov.querySelectorAll('[data-modal-action]').forEach(b => b.addEventListener('click', function() { cb(this.dataset.modalAction); }));
-        }
-        function fmt(v) { return 'R$ ' + (Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
-        function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
-        function nextId() { return products.length ? Math.max(...products.map(p => p.id)) + 1 : 1; }
-        function active() { return products.filter(p => p.active !== false); }
-        function switchTab(tab) {
-            if (document.querySelector('.tab-content.active')?.id === 'tab-carrinho') cartItems = [];
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('nav button').forEach(b => { b.classList.remove('active'); b.removeAttribute('aria-current'); });
-            const content = document.getElementById('tab-'+tab);
-            const btn = document.querySelector(`nav button[data-tab="${tab}"]`);
-            if (content) content.classList.add('active');
-            if (btn) { btn.classList.add('active'); btn.setAttribute('aria-current', 'page'); }
-            if (tab === 'estoque') renderEstoque();
-            else if (tab === 'carrinho') renderCarrinho();
-            else if (tab === 'compras') renderCompras();
-            else if (tab === 'historico') renderHistorico();
-            else if (tab === 'produtos') renderProdutos();
-        }
-        document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
-
-        // ------------------- ESTOQUE -------------------
-        function renderEstoque() {
-            const ativos = active().sort((a, b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
-            if (!ativos.length) {
-                document.getElementById('estoque-tbody').innerHTML = '';
-                document.getElementById('estoque-vazio').style.display = 'block';
-                document.getElementById('estoque-totalizadores').style.display = 'none';
-                return;
-            }
-            document.getElementById('estoque-vazio').style.display = 'none';
-            document.getElementById('estoque-totalizadores').style.display = 'flex';
-            let tQ=0, tV=0, html='';
-            ativos.forEach(p => {
-                const s = stock[p.id] || { quantidade:0, valor:0 };
-                const q = s.quantidade, v = s.valor||0, mn = p.minimo||0, id = p.ideal||0;
-                let bgCor, textoCor;
-                if (q === 0) {
-                    bgCor = '#1a1a1a'; textoCor = '#ccc';
-                } else if (q > 0 && q < mn) {
-                    bgCor = '#F50202'; textoCor = '#000';
-                } else if (q >= mn && q < id) {
-                    bgCor = '#FFDD59'; textoCor = '#000';
-                } else if (q >= id) {
-                    bgCor = '#6AB863'; textoCor = '#000';
+                for (const n of novos) {
+                    const ok = await upsertProduct(n);
+                    if (ok) {
+                        products.push(n);
+                        stock[n.id] = { quantidade: 0, valor: 0 };
+                        await upsertStock(n.id);
+                    }
                 }
-                tQ += q; tV += q*v;
-                html += `<tr><td>${esc(p.descricao)}</td><td>${mn}</td><td>${id}</td>
-                    <td><div class="estoque-cell">
-                        <button class="btn-menos" data-action="estoque-menos" data-id="${p.id}">−</button>
-                        <input type="number" class="estoque-input" value="${q}" 
-                               data-action="estoque-input" data-id="${p.id}" 
-                               min="0" step="1" inputmode="numeric"
-                               style="background-color: ${bgCor} !important; color: ${textoCor} !important;">
-                        <!-- Botão "+" removido na aba Estoque -->
-                    </div></td>
-                    <td>${fmt(v)}</td><td>${fmt(q*v)}</td></tr>`;
-            });
-            document.getElementById('estoque-tbody').innerHTML = html;
-            document.getElementById('estoque-total-qtd').textContent = tQ;
-            document.getElementById('estoque-total-valor').textContent = fmt(tV);
+                pending = [];
+                renderProdutos();
+                toast('Salvo!', 'success');
+            })();
         }
+        else if (a === 'editar-produto') editarProduto(+btn.dataset.id);
+    });
 
-        async function setEstoque(id, novoValor) {
-            const q = Number(novoValor);
-            if (isNaN(q) || q < 0) {
-                toast('Valor inválido.', 'error');
-                renderEstoque();
-                return;
-            }
-            if (!stock[id]) stock[id] = { quantidade: 0, valor: 0 };
-            stock[id].quantidade = q;
-            await saveAll();
-            renderEstoque();
+    document.getElementById('main-content').addEventListener('change', function(e) {
+        const target = e.target;
+        if (target.dataset.action === 'estoque-input') {
+            const id = +target.dataset.id;
+            const val = target.value;
+            setEstoque(id, val);
         }
-
-        async function altEstoque(id, d) {
-            if (!stock[id]) stock[id] = { quantidade:0, valor:0 };
-            const n = stock[id].quantidade + d;
-            if (n < 0) { toast('Estoque não pode ser negativo.', 'info'); return; }
-            stock[id].quantidade = n;
-            await saveAll();
-            renderEstoque();
-        }
-
-        // ------------------- CARRINHO -------------------
-        function renderCarrinho() {
-            if (!cartItems.length) {
-                document.getElementById('carrinho-tbody').innerHTML = '';
-                document.getElementById('carrinho-vazio').style.display = 'block';
-                document.getElementById('carrinho-totalizador').textContent = 'Total: R$ 0,00';
-                return;
-            }
-            document.getElementById('carrinho-vazio').style.display = 'none';
-            let html='', tot=0;
-            cartItems.forEach((it,i) => {
-                const vf = it.comprar * it.valorUnitario; tot += vf;
-                html += `<tr><td>${esc(it.descricao)}</td><td>${it.qtdMinimo}</td><td>${fmt(it.valorMinimo)}</td>
-                    <td>${it.qtdIdeal}</td><td>${fmt(it.valorIdeal)}</td>
-                    <td><div class="estoque-cell">
-                        <button class="btn-menos" data-action="carrinho-menos" data-index="${i}">−</button>
-                        <input type="number" class="estoque-input" value="${it.comprar}" 
-                               data-action="carrinho-input" data-index="${i}" 
-                               min="0" step="1" inputmode="numeric"
-                               style="background-color: #1a1a1a !important; color: #ccc !important;">
-                        <button class="btn-mais" data-action="carrinho-mais" data-index="${i}">+</button>
-                    </div></td>
-                    <td>${fmt(vf)}</td></tr>`;
-            });
-            document.getElementById('carrinho-tbody').innerHTML = html;
-            document.getElementById('carrinho-totalizador').textContent = `Total: ${fmt(tot)}`;
-        }
-
-        function sugerir() {
-            const ativos = active().sort((a, b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
-            if (!ativos.length) { toast('Nenhum produto ativo.', 'info'); return; }
-            cartItems = [];
-            ativos.forEach(p => {
-                const s = stock[p.id] || { quantidade:0, valor:0 };
-                if (s.quantidade >= p.ideal) return;
-                const mnD = Math.max(0, p.minimo - s.quantidade);
-                const idD = Math.max(0, p.ideal - s.quantidade);
-                cartItems.push({ productId:p.id, descricao:p.descricao, qtdMinimo:mnD, valorMinimo:mnD*(s.valor||0), qtdIdeal:idD, valorIdeal:idD*(s.valor||0), comprar:0, valorUnitario:s.valor||0 });
-            });
-            if (!cartItems.length) toast('Todos acima do Ideal.', 'info');
-            else toast(`Carrinho gerado com ${cartItems.length} itens.`, 'success');
-            renderCarrinho();
-        }
-
-        function altCarrinho(i, d) {
-            if (cartItems[i]) {
-                const n = cartItems[i].comprar + d;
-                if (n >= 0) {
-                    cartItems[i].comprar = n;
-                    renderCarrinho();
-                }
-            }
-        }
-
-        function comprarCarrinho() {
-            const it = cartItems.filter(i => i.comprar>0);
-            if (!it.length) { toast('Ajuste a coluna Comprar.', 'info'); return; }
-            purchaseLines = it.map(i => ({ descricao: i.descricao, quantidade: i.comprar, valor: 0 }));
-            toast('Transferido para Compras.', 'success'); switchTab('compras');
-        }
-
-        function enviarCarrinho() {
-            const it = cartItems.filter(i => i.comprar>0);
-            if (!it.length) { toast('Ajuste a coluna Comprar.', 'info'); return; }
-            let msg = '🛒 *Pedido de Compras*\n\n'; let t=0;
-            it.forEach(i => { const v = i.comprar*i.valorUnitario; t+=v; msg += `• ${i.descricao}: ${i.comprar} un (${fmt(v)})\n`; });
-            msg += `\n💰 Total: ${fmt(t)}`;
-            if (confirm('Enviar WhatsApp?\n\n'+it.map(i=>`• ${i.descricao}: ${i.comprar} un`).join('\n'))) window.open(`https://wa.me/5531993066079?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
-        // ------------------- COMPRAS -------------------
-        function renderCompras() {
-            if (!purchaseLines.length) { document.getElementById('compras-tbody').innerHTML = ''; document.getElementById('compras-vazio').style.display = 'block'; return; }
-            document.getElementById('compras-vazio').style.display = 'none';
-            const opts = active().sort((a,b) => a.descricao.localeCompare(b.descricao, 'pt-BR')).map(p => `<option value="${esc(p.descricao)}">`).join('');
-            document.getElementById('compras-tbody').innerHTML = purchaseLines.map((l,i) => `
-                <tr>
-                    <td><input type="text" list="cdl${i}" value="${esc(l.descricao)}" data-action="compra-desc" data-index="${i}"><datalist id="cdl${i}">${opts}</datalist></td>
-                    <td><div class="estoque-cell">
-                        <button class="btn-menos" data-action="compra-menos" data-index="${i}">−</button>
-                        <input type="number" class="estoque-input" value="${l.quantidade}" 
-                               data-action="compra-input" data-index="${i}" 
-                               min="0" step="1" inputmode="numeric"
-                               style="background-color: #1a1a1a !important; color: #ccc !important;">
-                        <button class="btn-mais" data-action="compra-mais" data-index="${i}">+</button>
-                    </div></td>
-                    <td><input type="number" step="0.01" value="${l.valor}" data-action="compra-valor" data-index="${i}" style="max-width:110px;" inputmode="decimal"></td>
-                    <td><button class="btn-excluir" data-action="compras-excluir" data-index="${i}">✕</button></td>
-                </tr>`).join('');
-        }
-
-        function syncCompras() {
-            document.querySelectorAll('#compras-tbody tr').forEach(r => {
-                const i = parseInt(r.querySelector('[data-action="compra-desc"]')?.dataset.index);
-                if (!isNaN(i) && purchaseLines[i]) {
-                    purchaseLines[i].descricao = r.querySelector('[data-action="compra-desc"]').value;
-                    purchaseLines[i].valor = parseFloat(r.querySelector('[data-action="compra-valor"]').value)||0;
-                }
-            });
-        }
-
-        function excluirCompra(i) {
-            const ov = openModal('Confirmar', '<p style="color:#ccc;text-align:center;">Excluir esta compra?</p>', [{cls:'btn-cancelar-modal',act:'c',lbl:'Cancelar'},{cls:'btn-excluir-modal',act:'e',lbl:'Excluir'}]);
-            modalResult(ov, a => { if (a==='e') { purchaseLines.splice(i,1); closeModal(); renderCompras(); toast('Removido.','info'); } else closeModal(); });
-        }
-
-        async function salvarCompras() {
-            syncCompras(); const er = [];
-            purchaseLines.forEach((l,i) => {
-                if (!l.descricao.trim()) er.push(`Linha ${i+1}: selecione produto.`);
-                if (l.quantidade <= 0) er.push(`Linha ${i+1}: quantidade inválida.`);
-                if (l.valor <= 0) er.push(`Linha ${i+1}: valor inválido.`);
-            });
-            if (er.length) { toast(er.join(' '), 'error'); return; }
-            const now = new Date().toISOString();
-            purchaseLines.forEach(l => {
-                const p = products.find(pp => pp.descricao.trim().toLowerCase() === l.descricao.trim().toLowerCase() && pp.active !== false);
-                if (!p) { er.push(`Produto "${l.descricao}" não encontrado.`); return; }
-                if (!stock[p.id]) stock[p.id] = { quantidade:0, valor:0 };
-                stock[p.id].quantidade += l.quantidade; stock[p.id].valor = l.valor;
-                purchaseHistory.push({ product_id:p.id, date:now, quantity:l.quantidade, value:l.valor });
-            });
-            if (er.length) { toast(er.join(' '), 'error'); return; }
-            purchaseLines = []; await saveAll(); renderCompras(); toast('Compra salva!', 'success');
-        }
-
-        // ------------------- HISTÓRICO -------------------
-        function renderHistorico() {
-            const nm = document.getElementById('filtro-historico').value.trim();
-            // Ordena produtos para o datalist
-            const sorted = products.slice().sort((a,b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
-            document.getElementById('historico-datalist').innerHTML = sorted.map(p => `<option value="${esc(p.descricao)}">`).join('');
-            if (!nm) { document.getElementById('historico-tbody').innerHTML = ''; document.getElementById('historico-vazio').style.display='block'; document.getElementById('valor-medio-historico').textContent = 'R$ 0,00'; return; }
-            const p = products.find(pp => pp.descricao.trim().toLowerCase() === nm.toLowerCase());
-            if (!p) { document.getElementById('historico-tbody').innerHTML = ''; document.getElementById('historico-vazio').style.display='block'; document.getElementById('valor-medio-historico').textContent = 'R$ 0,00'; return; }
-            const regs = purchaseHistory.filter(h => h.productId === p.id);
-            if (!regs.length) { document.getElementById('historico-tbody').innerHTML = ''; document.getElementById('historico-vazio').style.display='block'; document.getElementById('valor-medio-historico').textContent = 'R$ 0,00'; return; }
-            document.getElementById('historico-vazio').style.display = 'none';
-            let sv = 0;
-            document.getElementById('historico-tbody').innerHTML = regs.map(r => { sv += r.value; const d = new Date(r.date); return `<tr><td>${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td><td>${r.quantity}</td><td>${fmt(r.value)}</td></tr>`; }).join('');
-            document.getElementById('valor-medio-historico').textContent = fmt(sv / regs.length);
-        }
-        document.getElementById('filtro-historico').addEventListener('input', renderHistorico);
-        document.getElementById('btn-limpar-filtro').addEventListener('click', () => { document.getElementById('filtro-historico').value = ''; renderHistorico(); });
-
-        // ------------------- PRODUTOS -------------------
-        function renderProdutos() {
-            const sorted = products.slice().sort((a,b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
-            if (sorted.length) {
-                document.getElementById('produtos-table-wrapper').style.display = 'block';
-                document.getElementById('produtos-cadastrados-tbody').innerHTML = sorted.map(p => `
-                    <tr><td>${esc(p.descricao)}</td><td>${p.minimo}</td><td>${p.ideal}</td>
-                    <td><label class="switch"><input type="checkbox" data-action="toggle-active" data-id="${p.id}" ${p.active!==false?'checked':''}><span class="slider"></span></label></td>
-                    <td><button class="btn-editar" data-action="editar-produto" data-id="${p.id}">✏️</button></td></tr>`).join('');
-            } else document.getElementById('produtos-table-wrapper').style.display = 'none';
-            if (pending.length) {
-                document.getElementById('produtos-vazio').style.display = 'none';
-                document.getElementById('produtos-container').innerHTML = pending.map(l => `
-                    <div class="form-row" data-temp="${l.tempId}">
-                        <div class="field-group"><label>Desc:</label><input type="text" value="${esc(l.descricao)}" data-action="pend-desc" data-temp="${l.tempId}" placeholder="Arroz..."></div>
-                        <div class="field-group"><label>Mín:</label><input type="number" value="${l.minimo??''}" data-action="pend-min" data-temp="${l.tempId}" placeholder="0"></div>
-                        <div class="field-group"><label>Ideal:</label><input type="number" value="${l.ideal??''}" data-action="pend-ideal" data-temp="${l.tempId}" placeholder="0"></div>
-                        <label class="switch"><input type="checkbox" data-action="pend-active" data-temp="${l.tempId}" ${l.active!==false?'checked':''}><span class="slider"></span> Ativo</label>
-                    </div>`).join('');
+        if (target.dataset.action === 'carrinho-input') {
+            const i = +target.dataset.index;
+            const val = +target.value;
+            if (!isNaN(val) && val >= 0 && cartItems[i]) {
+                cartItems[i].comprar = val;
+                renderCarrinho();
             } else {
-                document.getElementById('produtos-container').innerHTML = '';
-                document.getElementById('produtos-vazio').style.display = sorted.length ? 'none' : 'block';
+                renderCarrinho();
             }
         }
-
-        function syncPending() {
-            document.querySelectorAll('#produtos-container .form-row').forEach(r => {
-                const t = parseInt(r.dataset.temp);
-                const l = pending.find(ll => ll.tempId === t);
-                if (!l) return;
-                l.descricao = r.querySelector('[data-action="pend-desc"]').value;
-                l.minimo = r.querySelector('[data-action="pend-min"]').value;
-                l.ideal = r.querySelector('[data-action="pend-ideal"]').value;
-                l.active = r.querySelector('[data-action="pend-active"]').checked;
-            });
+        if (target.dataset.action === 'compra-input') {
+            const i = +target.dataset.index;
+            const val = +target.value;
+            if (!isNaN(val) && val >= 0 && purchaseLines[i]) {
+                purchaseLines[i].quantidade = val;
+                renderCompras();
+            } else {
+                renderCompras();
+            }
         }
+    });
 
-        function editarProduto(id) {
-            const p = products.find(pp => pp.id === id);
-            if (!p) return;
-            const ov = openModal('Editar', `
-                <div class="form-row"><label>Descrição:</label><input type="text" id="ed" value="${esc(p.descricao)}"></div>
-                <div class="form-row"><label>Mínimo:</label><input type="number" id="em" value="${p.minimo}"></div>
-                <div class="form-row"><label>Ideal:</label><input type="number" id="ei" value="${p.ideal}"></div>`,
-                [{cls:'btn-cancelar-modal',act:'c',lbl:'Cancelar'},{cls:'btn-salvar-modal',act:'s',lbl:'Salvar'}]);
-            modalResult(ov, async a => {
-                if (a === 's') {
-                    const d = document.getElementById('ed').value.trim();
-                    const m = parseInt(document.getElementById('em').value);
-                    const i = parseInt(document.getElementById('ei').value);
-                    if (!d) { toast('Descrição obrigatória.', 'error'); return; }
-                    if (isNaN(m)||isNaN(i)) { toast('Mínimo e Ideal obrigatórios.', 'error'); return; }
-                    if (m > i) { toast('Mínimo > Ideal.', 'error'); return; }
-                    p.descricao = d; p.minimo = m; p.ideal = i;
-                    await saveAll(); closeModal(); renderProdutos(); toast('Atualizado!', 'success');
-                } else closeModal();
-            });
+    document.getElementById('main-content').addEventListener('input', e => {
+        const t = e.target, a = t.dataset.action;
+        if (a === 'compra-desc') { const i = +t.dataset.index; if (purchaseLines[i]) purchaseLines[i].descricao = t.value; }
+        if (a === 'compra-valor') { const i = +t.dataset.index; if (purchaseLines[i]) purchaseLines[i].valor = parseFloat(t.value)||0; }
+        if (a === 'pend-desc') { const tmp = +t.dataset.temp; const l = pending.find(ll=>ll.tempId===tmp); if(l) l.descricao = t.value; }
+        if (a === 'pend-min') { const tmp = +t.dataset.temp; const l = pending.find(ll=>ll.tempId===tmp); if(l) l.minimo = t.value; }
+        if (a === 'pend-ideal') { const tmp = +t.dataset.temp; const l = pending.find(ll=>ll.tempId===tmp); if(l) l.ideal = t.value; }
+    });
+
+    document.getElementById('main-content').addEventListener('change', async e => {
+        if (e.target.dataset.action === 'toggle-active') {
+            const p = products.find(pp => pp.id === +e.target.dataset.id);
+            if (p) {
+                const anterior = p.active;
+                p.active = e.target.checked;
+                const ok = await upsertProduct(p);
+                if (!ok) p.active = anterior;
+            }
         }
+    });
 
-        // ------------------- EVENTOS PRINCIPAIS -------------------
-        document.getElementById('main-content').addEventListener('click', e => {
-            const btn = e.target.closest('button');
-            if (!btn) return;
-            const a = btn.dataset.action;
-            if (a === 'estoque-menos') altEstoque(+btn.dataset.id, -1);
-            else if (a === 'estoque-mais') altEstoque(+btn.dataset.id, 1);
-            else if (a === 'carrinho-menos') altCarrinho(+btn.dataset.index, -1);
-            else if (a === 'carrinho-mais') altCarrinho(+btn.dataset.index, 1);
-            else if (a === 'sugerir-carrinho') sugerir();
-            else if (a === 'comprar-carrinho') comprarCarrinho();
-            else if (a === 'enviar-carrinho') enviarCarrinho();
-            else if (a === 'compra-menos') { const i = +btn.dataset.index; if (purchaseLines[i]) { purchaseLines[i].quantidade--; if (purchaseLines[i].quantidade<0) purchaseLines[i].quantidade=0; renderCompras(); } }
-            else if (a === 'compra-mais') { const i = +btn.dataset.index; if (purchaseLines[i]) { purchaseLines[i].quantidade++; renderCompras(); } }
-            else if (a === 'compras-adicionar') { purchaseLines.push({descricao:'',quantidade:0,valor:0}); renderCompras(); }
-            else if (a === 'compras-salvar') salvarCompras();
-            else if (a === 'compras-excluir') excluirCompra(+btn.dataset.index);
-            else if (a === 'incluir-produto') { pendCount++; pending.push({tempId:pendCount,descricao:'',minimo:null,ideal:null,active:true}); renderProdutos(); }
-            else if (a === 'salvar-produtos') {
-                syncPending(); const er = [];
-                pending.forEach((l,i) => {
-                    if (!l.descricao.trim()) er.push(`Linha ${i+1}: descrição.`);
-                    if (l.minimo===''||l.minimo===null) er.push(`Linha ${i+1}: mínimo.`);
-                    if (l.ideal===''||l.ideal===null) er.push(`Linha ${i+1}: ideal.`);
-                    if (Number(l.minimo) > Number(l.ideal)) er.push(`Linha ${i+1}: mín > ideal.`);
-                });
-                if (er.length) { toast(er.join(' '), 'error'); return; }
-                pending.forEach(l => { const n = { id:nextId(), descricao:l.descricao.trim(), minimo:Number(l.minimo), ideal:Number(l.ideal), active:l.active!==false }; products.push(n); stock[n.id]={quantidade:0,valor:0}; });
-                pending = []; saveAll().then(() => { renderProdutos(); toast('Salvo!', 'success'); });
-            }
-            else if (a === 'editar-produto') editarProduto(+btn.dataset.id);
-        });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-        // Eventos de input/change para os campos de quantidade
-        document.getElementById('main-content').addEventListener('change', function(e) {
-            const target = e.target;
-            if (target.dataset.action === 'estoque-input') {
-                const id = +target.dataset.id;
-                const val = target.value;
-                setEstoque(id, val);
-            }
-            if (target.dataset.action === 'carrinho-input') {
-                const i = +target.dataset.index;
-                const val = +target.value;
-                if (!isNaN(val) && val >= 0 && cartItems[i]) {
-                    cartItems[i].comprar = val;
-                    renderCarrinho();
-                } else {
-                    renderCarrinho();
-                }
-            }
-            if (target.dataset.action === 'compra-input') {
-                const i = +target.dataset.index;
-                const val = +target.value;
-                if (!isNaN(val) && val >= 0 && purchaseLines[i]) {
-                    purchaseLines[i].quantidade = val;
-                    renderCompras();
-                } else {
-                    renderCompras();
-                }
-            }
-        });
-
-        document.getElementById('main-content').addEventListener('input', e => {
-            const t = e.target, a = t.dataset.action;
-            if (a === 'compra-desc') { const i = +t.dataset.index; if (purchaseLines[i]) purchaseLines[i].descricao = t.value; }
-            if (a === 'compra-valor') { const i = +t.dataset.index; if (purchaseLines[i]) purchaseLines[i].valor = parseFloat(t.value)||0; }
-            if (a === 'pend-desc') { const tmp = +t.dataset.temp; const l = pending.find(ll=>ll.tempId===tmp); if(l) l.descricao = t.value; }
-            if (a === 'pend-min') { const tmp = +t.dataset.temp; const l = pending.find(ll=>ll.tempId===tmp); if(l) l.minimo = t.value; }
-            if (a === 'pend-ideal') { const tmp = +t.dataset.temp; const l = pending.find(ll=>ll.tempId===tmp); if(l) l.ideal = t.value; }
-        });
-
-        document.getElementById('main-content').addEventListener('change', async e => {
-            if (e.target.dataset.action === 'toggle-active') {
-                const p = products.find(pp => pp.id === +e.target.dataset.id);
-                if (p) { p.active = e.target.checked; await saveAll(); }
-            }
-        });
-
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-        if (isAuth()) { showApp(); } else { showLogin(); }
-    </script>
+    if (isAuth()) { showApp(); } else { showLogin(); }
+</script>
 </body>
 </html>
